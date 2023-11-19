@@ -1,21 +1,13 @@
-use reqwest::Client;
-use url;
-
-const SRUN_PORTAL: &str = "http://10.0.0.55";
-
-async fn get_acid(client: &Client) -> String {
-    let resp = client.get(SRUN_PORTAL).send().await.unwrap();
-    let redirect_url = resp.url().to_string();
-    let parsed_url = url::Url::parse(&redirect_url).unwrap();
-
-    let mut query = parsed_url.query_pairs().into_owned();
-    return query.find(|(key, _)| key == "ac_id").unwrap().1;
-}
+use reqwest;
+mod client;
 
 #[tokio::main]
 async fn main() {
-    let client = Client::new();
-    let acid = get_acid(&client).await;
+    let http = reqwest::Client::new();
 
+    let acid = client::get_acid(&http).await;
     println!("acid: {}", acid);
+
+    let login_state = client::get_login_state(&http).await;
+    println!("login_state: {:?}", login_state);
 }

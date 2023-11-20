@@ -1,4 +1,5 @@
 use reqwest;
+
 mod client;
 
 #[tokio::main]

@@ -1,14 +1,23 @@
-use reqwest;
-
 mod client;
+
+use client::get_login_state;
+use client::SrunClient;
 
 #[tokio::main]
 async fn main() {
-    let http = reqwest::Client::new();
+    let http_client = reqwest::Client::new();
 
-    let acid = client::get_acid(&http).await;
-    println!("acid: {}", acid);
+    let login_state = get_login_state(&http_client).await;
+    println!("{:?}", login_state);
 
-    let login_state = client::get_login_state(&http).await;
-    println!("login_state: {:?}", login_state);
+    let srun_client = SrunClient::new(
+        String::from("3120225654"),
+        Some(String::from("password")),
+        Some(http_client.clone()),
+    )
+    .await;
+
+    srun_client.login().await;
+    srun_client.logout().await;
+    srun_client.login().await;
 }

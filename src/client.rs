@@ -7,11 +7,11 @@ use hmac::Mac;
 use md5::Digest;
 use md5::Md5;
 use reqwest::Client;
-use serde;
+
 use serde::Deserialize;
 use serde::Serialize;
 use sha1::Sha1;
-use url;
+
 
 /// Constants used for the /srun_portal endpoint
 const SRUN_PORTAL: &str = "http://10.0.0.55";
@@ -92,10 +92,10 @@ async fn get_acid(client: &Client) -> String {
     let parsed_url = url::Url::parse(&redirect_url).unwrap();
 
     let mut query = parsed_url.query_pairs().into_owned();
-    return query
+    query
         .find(|(key, _)| key == "ac_id")
         .unwrap_or((String::from(""), String::from("1")))
-        .1;
+        .1
 }
 
 /// SRUN portal response type, when calling login/logout
@@ -158,10 +158,10 @@ impl SrunClient {
         http_client: Option<Client>,
         ip: Option<IpAddr>,
     ) -> SrunClient {
-        let http_client = http_client.unwrap_or(Client::new());
+        let http_client = http_client.unwrap_or_default();
         let ac_id = get_acid(&http_client).await;
         let login_state = get_login_state(&http_client).await;
-        let ip = ip.unwrap_or(login_state.online_ip.clone());
+        let ip = ip.unwrap_or(login_state.online_ip);
         SrunClient {
             http_client,
             username,
@@ -204,7 +204,7 @@ impl SrunClient {
         };
 
         let json_chksum_data = serde_json::to_string(&chksum_data).unwrap();
-        let encoded_data = xencode(&json_chksum_data.as_str(), &token.as_str());
+        let encoded_data = xencode(json_chksum_data.as_str(), token.as_str());
         let info = format!("{}{}", "{SRBX1}", fkbase64(encoded_data));
 
         // construct param payload

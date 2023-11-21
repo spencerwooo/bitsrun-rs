@@ -12,7 +12,6 @@ use serde::Deserialize;
 use serde::Serialize;
 use sha1::Sha1;
 
-
 /// Constants used for the /srun_portal endpoint
 const SRUN_PORTAL: &str = "http://10.0.0.55";
 const SRUN_TYPE: &str = "1";
@@ -54,7 +53,6 @@ pub struct SrunLoginState {
 
     // present when logged out
     pub client_ip: Option<IpAddr>,
-    // pub ecode: Option<i64>,
     pub error_msg: Option<String>,
     pub res: Option<String>,
     pub srun_ver: Option<String>,
@@ -98,34 +96,35 @@ async fn get_acid(client: &Client) -> String {
         .1
 }
 
-/// SRUN portal response type, when calling login/logout
+/// SRUN portal response type when calling login/logout
+///
+/// Note that fields that are not used are omitted
 #[derive(Debug, Clone, Deserialize)]
 pub struct SrunPortalResponse {
-    // present when logging out
-    pub client_ip: IpAddr,
-    // pub ecode: String,
-    pub error: String,
-    pub error_msg: String,
-    pub online_ip: IpAddr,
-    pub res: String,
-    pub srun_ver: String,
+    // present when logging in and succeeds
+    pub access_token: Option<String>,
 
-    // present when logging out but failed
-    pub st: Option<i64>,
+    pub client_ip: Option<IpAddr>,
+    pub online_ip: Option<IpAddr>,
+    pub error: Option<String>,
+    pub error_msg: Option<String>,
+    pub res: Option<String>,
+    pub suc_msg: Option<String>,
+
+    // present only when logging in
+    pub username: Option<String>,
 }
 
 #[derive(Debug, Clone, Deserialize)]
 pub struct SrunChallenge {
+    // the only useful field that must be present
     pub challenge: String,
-    // pub client_ip: String,
-    // pub ecode: i64,
-    // pub error: String,
-    // pub error_msg: String,
-    // pub expire: String,
-    // pub online_ip: String,
-    // pub res: String,
-    // pub srun_ver: String,
-    // pub st: i64,
+
+    pub client_ip: Option<IpAddr>,
+    pub online_ip: Option<IpAddr>,
+    pub error: Option<String>,
+    pub error_msg: Option<String>,
+    pub res: Option<String>,
 }
 
 /// SRUN client
@@ -173,7 +172,7 @@ impl SrunClient {
     }
 
     /// Login to the SRUN portal
-    pub async fn login(&self) {
+    pub async fn login(&self) -> SrunPortalResponse {
         // check if already logged in
         // if self.login_state.error == "ok" {
         //     panic!("Already logged in");
@@ -248,7 +247,11 @@ impl SrunClient {
                 panic!("Failed to login: {}", e);
             });
         let raw_text = resp.text().await.unwrap();
-        println!("{}", raw_text);
+        let raw_json = &raw_text[6..raw_text.len() - 1];
+        println!("{}", raw_json);
+        serde_json::from_str::<SrunPortalResponse>(raw_json).unwrap_or_else(|e| {
+            panic!("Failed to parse login response: {}", e);
+        })
     }
 
     /// Logout of the SRUN portal
@@ -297,6 +300,7 @@ impl SrunClient {
             });
         let raw_text = resp.text().await.unwrap();
         let raw_json = &raw_text[6..raw_text.len() - 1];
+        println!("{}", raw_json);
         serde_json::from_str::<SrunPortalResponse>(raw_json).unwrap_or_else(|e| {
             panic!("Failed to parse logout response: {}", e);
         })

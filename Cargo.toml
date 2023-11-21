@@ -1,5 +1,6 @@
 [package]
 name = "bitsrun"
+description = "A headless login and logout CLI app for 10.0.0.55 at BIT"
 version = "0.1.0"
 edition = "2021"
 

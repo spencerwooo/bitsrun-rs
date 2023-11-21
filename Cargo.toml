@@ -16,3 +16,5 @@ hmac = "0.12"
 md-5 = "0.10"
 base64 = "0.21"
 sha1 = "0.10"
+clap = { version = "4.4", features = ["derive"] }
+directories = "5.0"

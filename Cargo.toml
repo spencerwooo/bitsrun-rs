@@ -19,3 +19,5 @@ base64 = "0.21"
 sha1 = "0.10"
 clap = { version = "4.4", features = ["derive"] }
 directories = "5.0"
+colored = "2.0"
+rpassword = "7.3"

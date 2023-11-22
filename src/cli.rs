@@ -24,6 +24,10 @@ pub struct Args {
     /// Optionally provide path to the config file
     #[arg(short, long, global = true)]
     pub config: Option<String>,
+
+    /// Verbose output
+    #[arg(short, long, global = true)]
+    pub verbose: bool,
 }
 
 #[derive(Subcommand)]
@@ -34,6 +38,6 @@ pub enum Commands {
     /// Logout from the campus network
     Logout,
 
-    /// Check login status
+    /// Check device login status
     Status,
 }

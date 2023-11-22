@@ -174,9 +174,9 @@ impl SrunClient {
     /// Login to the SRUN portal
     pub async fn login(&self) -> SrunPortalResponse {
         // check if already logged in
-        // if self.login_state.error == "ok" {
-        //     panic!("Already logged in");
-        // }
+        if self.login_state.error == "ok" {
+            panic!("Already logged in");
+        }
 
         // check if password provided
         if self.password.is_none() {

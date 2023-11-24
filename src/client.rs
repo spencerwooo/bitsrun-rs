@@ -301,7 +301,7 @@ impl SrunClient {
 
             // tip to provide user override
             println!(
-                "{:>8} provide username argument {} to override",
+                "{:>8} provide username argument {} to override and logout current session",
                 "tip:".cyan(),
                 format!("`--user {}`", logged_in_username).bold().green()
             )

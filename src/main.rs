@@ -14,9 +14,15 @@ use colored::Colorize;
 use clap::Parser;
 
 #[tokio::main]
-async fn main() -> Result<()> {
+async fn main() {
+    if let Err(err) = cli().await {
+        eprintln!("{} {}", "error:".red().bold(), err);
+        std::process::exit(1);
+    }
+}
+
+async fn cli() -> Result<()> {
     let args = Args::parse();
-    let name = "bitsrun:".blue();
 
     // reusable http client
     let http_client = reqwest::Client::new();
@@ -29,7 +35,7 @@ async fn main() -> Result<()> {
             if login_state.error == "ok" {
                 println!(
                     "{} {} {} {}",
-                    &name.green(),
+                    "bitsrun:".green(),
                     &login_state.online_ip.to_string().underline(),
                     format!("({})", login_state.user_name.clone().unwrap_or_default()).dimmed(),
                     "is online"
@@ -37,14 +43,14 @@ async fn main() -> Result<()> {
             } else {
                 println!(
                     "{} {} {}",
-                    name,
+                    "bitsrun:".blue(),
                     login_state.online_ip.to_string().underline(),
                     "is offline"
                 );
             }
             if args.verbose {
                 let pretty_json = serde_json::to_string_pretty(&login_state)?;
-                println!("{}", pretty_json);
+                println!("{} response from API\n{}", "bitsrun:".blue(), pretty_json);
             }
         }
 
@@ -67,14 +73,14 @@ async fn main() -> Result<()> {
                 match resp.error.as_str() {
                     "ok" => println!(
                         "{} {} {} {}",
-                        name.green(),
+                        "bitsrun:".green(),
                         resp.online_ip.to_string().underline(),
                         format!("({})", resp.username.clone().unwrap_or_default()).dimmed(),
                         "logged in"
                     ),
                     _ => println!(
                         "{} failed to login, {} {}",
-                        name.red(),
+                        "bitsrun:".red(),
                         resp.error,
                         format!("({})", resp.error_msg).dimmed()
                     ),
@@ -82,20 +88,20 @@ async fn main() -> Result<()> {
 
                 if args.verbose {
                     let pretty_json = serde_json::to_string_pretty(&resp)?;
-                    println!("{}", pretty_json);
+                    println!("{} response from API\n{}", "bitsrun:".blue(), pretty_json);
                 }
             } else if let Some(Commands::Logout) = &args.command {
                 let resp = srun_client.logout().await?;
                 match resp.error.as_str() {
                     "ok" => println!(
                         "{} {} {}",
-                        name.green(),
+                        "bitsrun:".green(),
                         resp.online_ip.to_string().underline(),
                         "logged out"
                     ),
                     _ => println!(
                         "{} failed to logout, {} {}",
-                        name.red(),
+                        "bitsrun:".red(),
                         resp.error,
                         format!("({})", resp.error_msg).dimmed()
                     ),
@@ -108,7 +114,7 @@ async fn main() -> Result<()> {
             }
         }
 
-        None => {}
+        None => println!("{} No command specified, --help for usage", "bitsrun".blue()),
     }
 
     Ok(())

@@ -40,7 +40,7 @@ pub fn get_bit_user(
         let mut user_from_file = BitUserPartial::default();
         match parse_config_file(config_path) {
             Ok(value) => user_from_file = value,
-            Err(e) => println!("{}: {}", "warning".yellow(), e),
+            Err(e) => println!("{} {}", "warning:".yellow(), e),
         }
 
         match user_from_file.username {

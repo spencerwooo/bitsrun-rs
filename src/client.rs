@@ -256,8 +256,8 @@ impl SrunClient {
         let logged_in_username = self.login_state.user_name.clone().unwrap_or_default();
         if logged_in_username != self.username {
             println!(
-                "{}: logged in user ({}) does not match yourself ({})",
-                "warning".yellow(),
+                "{} logged in user ({}) does not match yourself ({})",
+                "warning:".yellow(),
                 logged_in_username,
                 self.username
             );
@@ -267,8 +267,8 @@ impl SrunClient {
         let logged_in_ip = self.login_state.online_ip;
         if logged_in_ip != self.ip {
             println!(
-                "{}: logged in ip (`{}`) does not match `{}`",
-                "warning".yellow(),
+                "{} logged in ip (`{}`) does not match `{}`",
+                "warning:".yellow(),
                 logged_in_ip,
                 self.ip
             );

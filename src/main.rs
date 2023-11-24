@@ -15,7 +15,7 @@ use clap::Parser;
 #[tokio::main]
 async fn main() {
     let args = Args::parse();
-    let name = "bitsrun".blue();
+    let name = "bitsrun:".blue();
 
     // reusable http client
     let http_client = reqwest::Client::new();
@@ -29,7 +29,7 @@ async fn main() {
                 Ok(login_state) => {
                     if login_state.error == "ok" {
                         println!(
-                            "{}: {} ({}) {}",
+                            "{} {} ({}) {}",
                             &name.green(),
                             &login_state.online_ip,
                             &login_state.user_name.as_ref().unwrap(),
@@ -42,7 +42,7 @@ async fn main() {
                         println!("{:?}", login_state);
                     }
                 }
-                Err(e) => println!("{}: {}", "error".red(), e),
+                Err(e) => println!("{} {}", "error:".red(), e),
             }
         }
 
@@ -66,13 +66,19 @@ async fn main() {
                 Ok(srun_client) => {
                     if let Some(Commands::Login) = &args.command {
                         let resp = srun_client.login().await;
-                        println!("{:?}", resp);
+                        match resp {
+                            Ok(resp) => println!("{:?}", resp),
+                            Err(e) => println!("{} {}", "error:".red(), e),
+                        }
                     } else if let Some(Commands::Logout) = &args.command {
                         let resp = srun_client.logout().await;
-                        println!("{:?}", resp);
+                        match resp {
+                            Ok(resp) => println!("{:?}", resp),
+                            Err(e) => println!("{} {}", "error:".red(), e),
+                        }
                     }
                 }
-                Err(e) => println!("{}: {}", "error".red(), e),
+                Err(e) => println!("{} {}", "error:".red(), e),
             }
         }
 

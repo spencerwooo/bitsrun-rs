@@ -13,6 +13,7 @@ use md5::Md5;
 use reqwest::Client;
 
 use serde::Deserialize;
+use serde::Serialize;
 use serde_json::json;
 use sha1::Sha1;
 
@@ -25,41 +26,66 @@ pub const SRUN_N: &str = "200";
 ///
 /// This response is used to determine if the device is logged in or not, and if it is logged in,
 /// what the current login state is (i.e., IP address, user balance, etc.).
-#[derive(Debug, Clone, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SrunLoginState {
     // always present
     pub error: String,
     pub online_ip: IpAddr,
 
     // present when logged in
-    #[serde(rename = "ServerFlag")]
+    #[serde(rename = "ServerFlag", skip_serializing_if = "Option::is_none")]
     pub server_flag: Option<i64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub add_time: Option<i64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub all_bytes: Option<i64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub bytes_in: Option<i64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub bytes_out: Option<i64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub checkout_date: Option<i64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub domain: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub group_id: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub keepalive_time: Option<i64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub products_name: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub real_name: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub remain_bytes: Option<i64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub remain_seconds: Option<i64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub sum_bytes: Option<i64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub sum_seconds: Option<i64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub sysver: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub user_balance: Option<i64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub user_charge: Option<i64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub user_mac: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub user_name: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub wallet_balance: Option<i64>,
 
     // present when logged out
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub client_ip: Option<IpAddr>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub error_msg: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub res: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub srun_ver: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub st: Option<i64>,
 }
 
@@ -79,9 +105,16 @@ pub async fn get_login_state(client: &Client) -> Result<SrunLoginState> {
     let text = resp.text().await?;
 
     // valid json starts at index 6 and ends at the second to last character
+    if text.len() < 8 {
+        bail!("login status response too short: `{}`", text)
+    }
     let raw_json = &text[6..text.len() - 1];
-    let parsed_json = serde_json::from_str::<SrunLoginState>(raw_json)
-        .with_context(|| format!("failed to parse malformed response:\n\n{}", raw_json))?;
+    let parsed_json = serde_json::from_str::<SrunLoginState>(raw_json).with_context(|| {
+        format!(
+            "failed to parse malformed login status response:\n  {}",
+            raw_json
+        )
+    })?;
 
     Ok(parsed_json)
 }
@@ -107,35 +140,32 @@ async fn get_acid(client: &Client) -> Result<String> {
 /// SRUN portal response type when calling login/logout
 ///
 /// Note that fields that are not used are omitted
-#[derive(Debug, Clone, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SrunPortalResponse {
-    // present when logging in and succeeds
+    // present only when logging in and succeeds
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub access_token: Option<String>,
-
-    pub client_ip: Option<IpAddr>,
-    pub online_ip: Option<IpAddr>,
-    pub error: Option<String>,
-    pub error_msg: Option<String>,
-    pub res: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub username: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub suc_msg: Option<String>,
 
-    // present only when logging in
-    pub username: Option<String>,
+    // always present on logins and logouts
+    pub client_ip: IpAddr,
+    pub online_ip: IpAddr,
+    pub error: String,
+    pub error_msg: String,
+    pub res: String,
 }
 
 #[derive(Debug, Clone, Deserialize)]
 pub struct SrunChallenge {
     // the only useful field that must be present
     pub challenge: String,
-
-    pub client_ip: Option<IpAddr>,
-    pub online_ip: Option<IpAddr>,
-    pub error: Option<String>,
-    pub error_msg: Option<String>,
-    pub res: Option<String>,
 }
 
 /// SRUN client
+#[derive(Debug)]
 pub struct SrunClient {
     // reusable http client
     pub http_client: Client,
@@ -183,7 +213,10 @@ impl SrunClient {
     pub async fn login(&self) -> Result<SrunPortalResponse> {
         // check if already logged in
         if self.login_state.error == "ok" {
-            bail!("already logged in")
+            bail!(
+                "{} already logged in",
+                self.login_state.online_ip.to_string().underline()
+            )
         }
 
         // construct checksum and crypto encodings
@@ -240,27 +273,38 @@ impl SrunClient {
             .await
             .with_context(|| "failed to send request when logging in")?;
         let raw_text = resp.text().await?;
+
+        if raw_text.len() < 8 {
+            bail!("login response too short: `{}`", raw_text)
+        }
         let raw_json = &raw_text[6..raw_text.len() - 1];
         serde_json::from_str::<SrunPortalResponse>(raw_json)
-            .with_context(|| format!("failed to parse malformed login response:\n\n{}", raw_json))
+            .with_context(|| format!("failed to parse malformed login response:\n  {}", raw_json))
     }
 
     /// Logout of the SRUN portal
     pub async fn logout(&self) -> Result<SrunPortalResponse> {
         // check if already logged out
         if self.login_state.error == "not_online_error" {
-            bail!("already logged out")
+            bail!("{} already logged out", self.ip.to_string().underline())
         }
 
         // check if username match
         let logged_in_username = self.login_state.user_name.clone().unwrap_or_default();
         if logged_in_username != self.username {
             println!(
-                "{} logged in user ({}) does not match yourself ({})",
+                "{} logged in user {} does not match yourself {}",
                 "warning:".yellow(),
-                logged_in_username,
-                self.username
+                format!("({})", logged_in_username).dimmed(),
+                format!("({})", self.username).dimmed()
             );
+
+            // tip to provide user override
+            println!(
+                "{:>8} provide username argument {} to override",
+                "tip:".cyan(),
+                format!("`--user {}`", logged_in_username).bold().green()
+            )
         }
 
         // check if ip match
@@ -269,8 +313,8 @@ impl SrunClient {
             println!(
                 "{} logged in ip (`{}`) does not match `{}`",
                 "warning:".yellow(),
-                logged_in_ip,
-                self.ip
+                logged_in_ip.to_string().underline(),
+                self.ip.to_string().underline()
             );
         }
 
@@ -294,7 +338,7 @@ impl SrunClient {
         let raw_text = resp.text().await?;
         let raw_json = &raw_text[6..raw_text.len() - 1];
         serde_json::from_str::<SrunPortalResponse>(raw_json)
-            .with_context(|| format!("failed to parse malformed logout response:\n\n{}", raw_json))
+            .with_context(|| format!("failed to parse malformed logout response:\n  {}", raw_json))
     }
 
     async fn get_challenge(&self) -> Result<String> {
@@ -312,11 +356,15 @@ impl SrunClient {
             .send()
             .await
             .with_context(|| "failed to get challenge")?;
-        let raw_text = resp.text().await.unwrap();
+        let raw_text = resp.text().await?;
+
+        if raw_text.len() < 8 {
+            bail!("logout response too short: `{}`", raw_text)
+        }
         let raw_json = &raw_text[6..raw_text.len() - 1];
         let parsed_json = serde_json::from_str::<SrunChallenge>(raw_json).with_context(|| {
             format!(
-                "failed to parse malformed get_challenge response:\n\n{}",
+                "failed to parse malformed get_challenge response:\n  {}",
                 raw_json
             )
         })?;

@@ -44,11 +44,14 @@ async fn main() {
 
         // login or logout
         Some(Commands::Login) | Some(Commands::Logout) => {
-            let mut username = args.username.clone();
-            let mut password = args.password.clone();
-            let bit_user = user::get_bit_user(&mut username, &mut password, args.config)
-                .with_context(|| "unable to parse user credentials")
-                .unwrap();
+            let bit_user = user::get_bit_user(
+                args.username.clone(),
+                args.password.clone(),
+                args.config,
+            )
+            .with_context(|| "unable to parse user credentials")
+            .unwrap();
+            println!("{:?}", bit_user);
 
             let srun_client = SrunClient::new(
                 bit_user.username.unwrap(),

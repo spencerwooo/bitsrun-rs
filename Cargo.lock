@@ -123,6 +123,7 @@ dependencies = [
  "md-5",
  "reqwest",
  "rpassword",
+ "rprompt",
  "serde",
  "serde_json",
  "sha1",
@@ -890,6 +891,16 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "80472be3c897911d0137b2d2b9055faf6eeac5b14e324073d83bc17b191d7e3f"
 dependencies = [
  "libc",
+ "rtoolbox",
+ "windows-sys",
+]
+
+[[package]]
+name = "rprompt"
+version = "2.1.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "0d24bc146fc6baf226b8bca973d5e7655bd2077a8d94d9809a060c185108e611"
+dependencies = [
  "rtoolbox",
  "windows-sys",
 ]

@@ -3,13 +3,12 @@ mod client;
 mod user;
 mod xencode;
 
+use anyhow::Context;
 use cli::Args;
 use cli::Commands;
 use client::get_login_state;
 use client::SrunClient;
 use colored::Colorize;
-use serde_json;
-use std::fs::File;
 
 use clap::Parser;
 
@@ -45,20 +44,19 @@ async fn main() {
 
         // login or logout
         Some(Commands::Login) | Some(Commands::Logout) => {
-            // if username or password is not provided, try to read from config file
-            let bit_user = user::get_bit_user(
-                args.username.clone(),
-                args.password.clone(),
-                args.config.clone(),
-            );
+            let mut username = args.username.clone();
+            let mut password = args.password.clone();
+            let bit_user = user::get_bit_user(&mut username, &mut password, args.config)
+                .with_context(|| "unable to parse user credentials")
+                .unwrap();
 
-            // parse options
-            let username = args.username;
-            let password = args.password;
-            let ip = args.ip;
-            // let config_path = args.config;
-
-            let srun_client = SrunClient::new(username, password, Some(http_client), ip).await;
+            let srun_client = SrunClient::new(
+                bit_user.username.unwrap(),
+                bit_user.password,
+                Some(http_client),
+                args.ip,
+            )
+            .await;
 
             if let Some(Commands::Login) = &args.command {
                 let resp = srun_client.login().await;

@@ -1,5 +1,4 @@
 use std::fs;
-use std::io;
 
 use anyhow::Context;
 use anyhow::Result;
@@ -10,8 +9,8 @@ use serde_json;
 /// Campus network user credentials
 #[derive(Serialize, Deserialize)]
 pub struct BitUser {
-    username: Option<String>,
-    password: Option<String>,
+    pub username: Option<String>,
+    pub password: Option<String>,
 }
 
 impl BitUser {
@@ -20,9 +19,10 @@ impl BitUser {
     }
 }
 
+/// Get campus network user credentials from command line arguments or config file
 pub fn get_bit_user(
-    username: Option<String>,
-    password: Option<String>,
+    username: &mut Option<String>,
+    password: &mut Option<String>,
     config_path: Option<String>,
 ) -> Result<BitUser> {
     let config_path = config_path.unwrap_or(String::from("bit-user.json"));
@@ -38,13 +38,16 @@ pub fn get_bit_user(
             .unwrap();
 
         if user_from_file.username.is_none() {
-            print!("Please enter your username: ");
-            let mut username = String::new();
-            io::stdin().read_line(&mut username)?;
+            let input_name = rprompt::prompt_reply("Please enter your campus id: ")
+                .with_context(|| "failed to read username")?;
+            username.get_or_insert(input_name);
         }
         if user_from_file.password.is_none() {
-            let password = rpassword::prompt_password("Please enter your password: ")?;
+            let input_password = rpassword::prompt_password("Please enter your password: ")
+                .with_context(|| "failed to read password")?;
+            password.get_or_insert(input_password);
         }
     }
-    Ok(bit_user)
+
+    Ok(BitUser::new(username.clone(), password.clone()))
 }

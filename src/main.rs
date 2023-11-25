@@ -109,12 +109,12 @@ async fn cli() -> Result<()> {
 
                 if args.verbose {
                     let pretty_json = serde_json::to_string_pretty(&resp)?;
-                    println!("{}", pretty_json);
+                    println!("{} response from API\n{}", "bitsrun:".blue(), pretty_json);
                 }
             }
         }
 
-        None => println!("{} No command specified, --help for usage", "bitsrun".blue()),
+        None => println!("{} No command specified, --help for usage", "bitsrun:".blue()),
     }
 
     Ok(())

@@ -195,7 +195,7 @@ impl SrunClient {
         http_client: Option<Client>,
         ip: Option<IpAddr>,
     ) -> Result<SrunClient> {
-        let http_client = http_client.unwrap_or(Client::new());
+        let http_client = http_client.unwrap_or_default();
         let ac_id = get_acid(&http_client).await?;
         let login_state = get_login_state(&http_client).await?;
         let ip = ip.unwrap_or(login_state.online_ip);

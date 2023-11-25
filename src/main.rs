@@ -34,18 +34,16 @@ async fn cli() -> Result<()> {
             let login_state = get_login_state(&http_client).await?;
             if login_state.error == "ok" {
                 println!(
-                    "{} {} {} {}",
+                    "{} {} {} is online",
                     "bitsrun:".green(),
                     &login_state.online_ip.to_string().underline(),
-                    format!("({})", login_state.user_name.clone().unwrap_or_default()).dimmed(),
-                    "is online"
+                    format!("({})", login_state.user_name.clone().unwrap_or_default()).dimmed()
                 );
             } else {
                 println!(
-                    "{} {} {}",
+                    "{} {} is offline",
                     "bitsrun:".blue(),
-                    login_state.online_ip.to_string().underline(),
-                    "is offline"
+                    login_state.online_ip.to_string().underline()
                 );
             }
             if args.verbose {
@@ -72,11 +70,10 @@ async fn cli() -> Result<()> {
                 let resp = srun_client.login().await?;
                 match resp.error.as_str() {
                     "ok" => println!(
-                        "{} {} {} {}",
+                        "{} {} {} logged in",
                         "bitsrun:".green(),
                         resp.online_ip.to_string().underline(),
-                        format!("({})", resp.username.clone().unwrap_or_default()).dimmed(),
-                        "logged in"
+                        format!("({})", resp.username.clone().unwrap_or_default()).dimmed()
                     ),
                     _ => println!(
                         "{} failed to login, {} {}",
@@ -94,10 +91,9 @@ async fn cli() -> Result<()> {
                 let resp = srun_client.logout().await?;
                 match resp.error.as_str() {
                     "ok" => println!(
-                        "{} {} {}",
+                        "{} {} logged out",
                         "bitsrun:".green(),
-                        resp.online_ip.to_string().underline(),
-                        "logged out"
+                        resp.online_ip.to_string().underline()
                     ),
                     _ => println!(
                         "{} failed to logout, {} {}",

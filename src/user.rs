@@ -5,7 +5,7 @@ use anyhow::Result;
 use colored::Colorize;
 use serde::Deserialize;
 use serde::Serialize;
-use serde_json;
+
 
 /// Campus network user credentials that are finalized
 #[derive(Debug, Default)]

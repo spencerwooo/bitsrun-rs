@@ -19,7 +19,7 @@ use tables::print_login_state;
 #[tokio::main]
 async fn main() {
     if let Err(err) = cli().await {
-        eprintln!("{} error - {}", "bitsrun:".red().bold(), err);
+        eprintln!("{} {} {}", "bitsrun:".bright_red(), "[error]".dimmed(), err);
         std::process::exit(1);
     }
 }
@@ -47,7 +47,7 @@ async fn cli() -> Result<()> {
             if login_state.error == "ok" {
                 println!(
                     "{} {} {} is online",
-                    "bitsrun:".green(),
+                    "bitsrun:".bright_green(),
                     &login_state.online_ip.to_string().underline(),
                     format!("({})", login_state.user_name.clone().unwrap_or_default()).dimmed()
                 );
@@ -85,7 +85,7 @@ async fn cli() -> Result<()> {
                 match resp.error.as_str() {
                     "ok" => println!(
                         "{} {} {} logged in",
-                        "bitsrun:".green(),
+                        "bitsrun:".bright_green(),
                         resp.online_ip.to_string().underline(),
                         format!("({})", resp.username.clone().unwrap_or_default()).dimmed()
                     ),

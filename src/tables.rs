@@ -1,5 +1,11 @@
 use crate::client::SrunLoginState;
 use crate::user::enumerate_config_paths;
+use chrono::Duration;
+use chrono_humanize::Accuracy::Rough;
+use chrono_humanize::HumanTime;
+use chrono_humanize::Tense::Present;
+use humansize::format_size;
+use humansize::BINARY;
 use owo_colors::OwoColorize;
 use tabled::builder::Builder;
 use tabled::settings::Style;
@@ -35,14 +41,18 @@ pub fn print_login_state(state: SrunLoginState) {
 
     // parse outputs from login state response
     let traffic_used = state.sum_bytes.unwrap_or(0);
+
     let online_time = state.sum_seconds.unwrap_or(0);
-    let user_balance = state.user_balance.unwrap_or(0);
-    let wallet = state.wallet_balance.unwrap_or(0);
-    builder.push_record(vec![
-        traffic_used.green().to_string(),
-        online_time.yellow().to_string(),
-        user_balance.cyan().to_string(),
-        wallet.magenta().to_string(),
+    let human_time = HumanTime::from(Duration::seconds(online_time));
+
+    let user_balance = state.user_balance.unwrap_or(0) as f32;
+    let wallet = state.wallet_balance.unwrap_or(0) as f32;
+
+    builder.push_record([
+        format_size(traffic_used, BINARY).green().to_string(),
+        human_time.to_text_en(Rough, Present).yellow().to_string(),
+        format!("{:.2}", user_balance).cyan().to_string(),
+        format!("{:.2}", wallet).magenta().to_string(),
     ]);
 
     let mut table = builder.build();

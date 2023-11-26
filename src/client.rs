@@ -38,19 +38,19 @@ pub struct SrunLoginState {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub add_time: Option<i64>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub all_bytes: Option<i64>,
+    pub all_bytes: Option<u64>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub bytes_in: Option<i64>,
+    pub bytes_in: Option<u64>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub bytes_out: Option<i64>,
+    pub bytes_out: Option<u64>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub checkout_date: Option<i64>,
+    pub checkout_date: Option<u64>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub domain: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub group_id: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub keepalive_time: Option<i64>,
+    pub keepalive_time: Option<u64>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub products_name: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -60,7 +60,7 @@ pub struct SrunLoginState {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub remain_seconds: Option<i64>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub sum_bytes: Option<i64>,
+    pub sum_bytes: Option<u64>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub sum_seconds: Option<i64>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -303,7 +303,9 @@ impl SrunClient {
             println!(
                 "{:>8} provide username argument {} to override and logout current session",
                 "tip:".cyan(),
-                format!("`--user {}`", logged_in_username).bold().green()
+                format!("`--user {}`", logged_in_username)
+                    .bold()
+                    .bright_green()
             )
         }
 

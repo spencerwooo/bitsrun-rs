@@ -10,10 +10,11 @@ use cli::Arguments;
 use cli::Commands;
 use client::get_login_state;
 use client::SrunClient;
-use colored::Colorize;
+use owo_colors::OwoColorize;
 
 use clap::Parser;
 use tables::print_config_paths;
+use tables::print_login_state;
 
 #[tokio::main]
 async fn main() {
@@ -50,18 +51,15 @@ async fn cli() -> Result<()> {
                     &login_state.online_ip.to_string().underline(),
                     format!("({})", login_state.user_name.clone().unwrap_or_default()).dimmed()
                 );
+
+                // print status table
+                print_login_state(login_state);
             } else {
                 println!(
                     "{} {} is offline",
                     "bitsrun:".blue(),
                     login_state.online_ip.to_string().underline()
                 );
-            }
-
-            // verbose output
-            if args.verbose {
-                let pretty_json = serde_json::to_string_pretty(&login_state)?;
-                println!("{} response from API\n{}", "bitsrun:".blue(), pretty_json);
             }
         }
 

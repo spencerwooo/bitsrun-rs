@@ -1,3 +1,7 @@
+/**
+ * Encryption algorithm implementation borrowed from
+ * https://github.com/zu1k/srun/blob/d47cd60b54503992ffb4eabeb23b27aecb1edf23/src/xencode.rs
+ */
 use base64::alphabet::Alphabet;
 use base64::engine::Engine;
 use base64::engine::GeneralPurpose;

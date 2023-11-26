@@ -1,9 +1,10 @@
+use std::env;
 use std::fs;
 
 use anyhow::anyhow;
 use anyhow::Context;
 use anyhow::Result;
-use colored::Colorize;
+use owo_colors::OwoColorize;
 use serde::Deserialize;
 use serde::Serialize;
 
@@ -28,6 +29,59 @@ impl BitUserPartial {
             password: password.clone(),
         }
     }
+}
+
+/// Enumerate possible paths to user config file (platform specific)
+///
+/// On Windows:
+/// * `~\AppData\Roaming\bitsrun\bit-user.json`
+///
+/// On Linux:
+/// * `$XDG_CONFIG_HOME/bitsrun/bit-user.json`
+/// * `~/.config/bitsrun/bit-user.json`
+/// * `~/.config/bit-user.json`
+///
+/// On macOS:
+/// * `$HOME/Library/Preferences/bitsrun/bit-user.json`
+/// * `$HOME/.config/bit-user.json`
+/// * `$HOME/.config/bitsrun/bit-user.json`
+///
+/// Additionally, `bitsrun` will search for config file in the current working directory.
+pub fn enumerate_config_paths() -> Vec<String> {
+    let mut paths = Vec::new();
+
+    // Windows
+    if env::consts::OS == "windows" {
+        if let Some(appdata) = env::var_os("APPDATA") {
+            paths.push(format!(
+                "{}\\bitsrun\\bit-user.json",
+                appdata.to_str().unwrap()
+            ));
+        }
+    }
+
+    // Linux (and macOS)
+    if let Some(home) = env::var_os("XDG_CONFIG_HOME").or_else(|| env::var_os("HOME")) {
+        paths.push(format!("{}/.config/bit-user.json", home.to_str().unwrap()));
+        paths.push(format!(
+            "{}/.config/bitsrun/bit-user.json",
+            home.to_str().unwrap()
+        ));
+    }
+
+    // macOS
+    if env::consts::OS == "macos" {
+        if let Some(home) = env::var_os("HOME") {
+            paths.push(format!(
+                "{}/Library/Preferences/bitsrun/bit-user.json",
+                home.to_str().unwrap()
+            ));
+        }
+    }
+
+    // current working directory
+    paths.push("bit-user.json".into());
+    paths
 }
 
 /// Parse credentials from config file
@@ -57,53 +111,6 @@ fn parse_config_file(config_path: &Option<String>) -> Result<BitUserPartial> {
             .with_context(|| format!("failed to parse config file `{}`", &config.underline()))?;
         Ok(user_from_file)
     }
-}
-
-/// Enumerate possible paths to config file (platform specific)
-///
-/// On Windows:
-/// * `~\AppData\Roaming\bitsrun\bit-user.json`
-///
-/// On Linux:
-/// * `$XDG_CONFIG_HOME/bitsrun/bit-user.json`
-/// * `~/.config/bitsrun/bit-user.json`
-/// * `~/.config/bit-user.json`
-///
-/// On macOS:
-/// * `$HOME/Library/Preferences/bitsrun/bit-user.json`
-/// * `$HOME/.config/bit-user.json`
-/// * `$HOME/.config/bitsrun/bit-user.json`
-pub fn enumerate_config_paths() -> Vec<String> {
-    let mut paths = Vec::new();
-
-    // Windows
-    if let Some(appdata) = std::env::var_os("APPDATA") {
-        paths.push(format!(
-            "{}\\bitsrun\\bit-user.json",
-            appdata.to_str().unwrap()
-        ));
-    }
-
-    // Linux and macOS
-    if let Some(home) = std::env::var_os("HOME") {
-        paths.push(format!("{}/.config/bit-user.json", home.to_str().unwrap()));
-        paths.push(format!(
-            "{}/.config/bitsrun/bit-user.json",
-            home.to_str().unwrap()
-        ));
-    }
-
-    // macOS
-    if std::env::consts::OS == "macos" {
-        if let Some(home) = std::env::var_os("HOME") {
-            paths.push(format!(
-                "{}/Library/Preferences/bitsrun/bit-user.json",
-                home.to_str().unwrap()
-            ));
-        }
-    }
-
-    paths
 }
 
 /// Get campus network user credentials from command line arguments or config file

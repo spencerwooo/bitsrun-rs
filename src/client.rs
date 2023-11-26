@@ -5,11 +5,11 @@ use crate::xencode::xencode;
 use anyhow::bail;
 use anyhow::Context;
 use anyhow::Result;
-use colored::Colorize;
 use hmac::Hmac;
 use hmac::Mac;
 use md5::Digest;
 use md5::Md5;
+use owo_colors::OwoColorize;
 use reqwest::Client;
 
 use serde::Deserialize;

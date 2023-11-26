@@ -25,6 +25,9 @@ pub enum Commands {
 
     /// Check device login status
     Status(StatusArgs),
+
+    /// List all possible config file paths
+    ConfigPaths,
 }
 
 #[derive(Args)]

@@ -1,5 +1,6 @@
 mod cli;
 mod client;
+mod tables;
 mod user;
 mod xencode;
 
@@ -12,6 +13,7 @@ use client::SrunClient;
 use colored::Colorize;
 
 use clap::Parser;
+use tables::print_config_paths;
 
 #[tokio::main]
 async fn main() {
@@ -66,9 +68,9 @@ async fn cli() -> Result<()> {
         // login or logout
         Some(Commands::Login(client_args)) | Some(Commands::Logout(client_args)) => {
             let bit_user = user::get_bit_user(
-                client_args.username.clone(),
-                client_args.password.clone(),
-                client_args.config.clone(),
+                &client_args.username,
+                &client_args.password,
+                &client_args.config,
             )
             .with_context(|| "unable to parse user credentials")?;
 
@@ -123,6 +125,8 @@ async fn cli() -> Result<()> {
                 }
             }
         }
+
+        Some(Commands::ConfigPaths) => print_config_paths(),
 
         None => {}
     }

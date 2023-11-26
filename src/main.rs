@@ -18,7 +18,7 @@ use tables::print_config_paths;
 #[tokio::main]
 async fn main() {
     if let Err(err) = cli().await {
-        eprintln!("{} {}", "error:".red().bold(), err);
+        eprintln!("{} error - {}", "bitsrun:".red().bold(), err);
         std::process::exit(1);
     }
 }

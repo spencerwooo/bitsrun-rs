@@ -1,29 +1,14 @@
 use std::net::IpAddr;
 
+use clap::Args;
 use clap::Parser;
 use clap::Subcommand;
 
 #[derive(Parser)]
 #[command(author, about, version, arg_required_else_help = true)]
-pub struct Args {
+pub struct Arguments {
     #[command(subcommand)]
     pub command: Option<Commands>,
-
-    /// Your campus username
-    #[arg(short, long, global = true)]
-    pub username: Option<String>,
-
-    /// Your campus password
-    #[arg(short, long, global = true)]
-    pub password: Option<String>,
-
-    /// Manually specify IP address (IPv4)
-    #[arg(short, long, global = true)]
-    pub ip: Option<IpAddr>,
-
-    /// Optionally provide path to the config file
-    #[arg(short, long, global = true)]
-    pub config: Option<String>,
 
     /// Verbose output
     #[arg(short, long, global = true)]
@@ -33,11 +18,37 @@ pub struct Args {
 #[derive(Subcommand)]
 pub enum Commands {
     /// Login to the campus network
-    Login,
+    Login(ClientArgs),
 
     /// Logout from the campus network
-    Logout,
+    Logout(ClientArgs),
 
     /// Check device login status
-    Status,
+    Status(StatusArgs),
+}
+
+#[derive(Args)]
+pub struct StatusArgs {
+    /// Output JSON literal
+    #[arg(short, long)]
+    pub json: bool,
+}
+
+#[derive(Args)]
+pub struct ClientArgs {
+    /// Your campus username
+    #[arg(short, long)]
+    pub username: Option<String>,
+
+    /// Your campus password
+    #[arg(short, long)]
+    pub password: Option<String>,
+
+    /// Manually specify IP address (IPv4)
+    #[arg(short, long)]
+    pub ip: Option<IpAddr>,
+
+    /// Optionally provide path to the config file
+    #[arg(short, long)]
+    pub config: Option<String>,
 }

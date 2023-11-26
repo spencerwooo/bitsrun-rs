@@ -5,7 +5,7 @@ mod xencode;
 
 use anyhow::Context;
 use anyhow::Result;
-use cli::Args;
+use cli::Arguments;
 use cli::Commands;
 use client::get_login_state;
 use client::SrunClient;
@@ -22,7 +22,7 @@ async fn main() {
 }
 
 async fn cli() -> Result<()> {
-    let args = Args::parse();
+    let args = Arguments::parse();
 
     // reusable http client
     let http_client = reqwest::Client::new();
@@ -30,8 +30,17 @@ async fn cli() -> Result<()> {
     // commands
     match &args.command {
         // check login status
-        Some(Commands::Status) => {
+        Some(Commands::Status(status_args)) => {
             let login_state = get_login_state(&http_client).await?;
+
+            // output json
+            if status_args.json {
+                let raw_json = serde_json::to_string(&login_state)?;
+                println!("{}", raw_json);
+                return Ok(());
+            }
+
+            // output human readable
             if login_state.error == "ok" {
                 println!(
                     "{} {} {} is online",
@@ -46,6 +55,8 @@ async fn cli() -> Result<()> {
                     login_state.online_ip.to_string().underline()
                 );
             }
+
+            // verbose output
             if args.verbose {
                 let pretty_json = serde_json::to_string_pretty(&login_state)?;
                 println!("{} response from API\n{}", "bitsrun:".blue(), pretty_json);
@@ -53,20 +64,23 @@ async fn cli() -> Result<()> {
         }
 
         // login or logout
-        Some(Commands::Login) | Some(Commands::Logout) => {
-            let bit_user =
-                user::get_bit_user(args.username.clone(), args.password.clone(), args.config)
-                    .with_context(|| "unable to parse user credentials")?;
+        Some(Commands::Login(client_args)) | Some(Commands::Logout(client_args)) => {
+            let bit_user = user::get_bit_user(
+                client_args.username.clone(),
+                client_args.password.clone(),
+                client_args.config.clone(),
+            )
+            .with_context(|| "unable to parse user credentials")?;
 
             let srun_client = SrunClient::new(
                 bit_user.username,
                 bit_user.password,
                 Some(http_client),
-                args.ip,
+                client_args.ip,
             )
             .await?;
 
-            if let Some(Commands::Login) = &args.command {
+            if let Some(Commands::Login(_)) = &args.command {
                 let resp = srun_client.login().await?;
                 match resp.error.as_str() {
                     "ok" => println!(
@@ -87,7 +101,7 @@ async fn cli() -> Result<()> {
                     let pretty_json = serde_json::to_string_pretty(&resp)?;
                     println!("{} response from API\n{}", "bitsrun:".blue(), pretty_json);
                 }
-            } else if let Some(Commands::Logout) = &args.command {
+            } else if let Some(Commands::Logout(_)) = &args.command {
                 let resp = srun_client.logout().await?;
                 match resp.error.as_str() {
                     "ok" => println!(
@@ -110,7 +124,7 @@ async fn cli() -> Result<()> {
             }
         }
 
-        None => println!("{} No command specified, --help for usage", "bitsrun:".blue()),
+        None => {}
     }
 
     Ok(())

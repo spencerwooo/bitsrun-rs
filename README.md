@@ -57,6 +57,9 @@ Options:
   -V, --version  Print version
 ```
 
+> [!TIP]
+> Use environment variable `NO_COLOR=true` to disable colored output.
+
 ## Credentials
 
 User credentials are stored in config file `bit-user.json`. Available config file paths can be listed with:

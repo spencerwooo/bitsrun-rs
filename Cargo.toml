@@ -27,7 +27,7 @@ base64 = "0.21"
 sha1 = "0.10"
 clap = { version = "4.4", features = ["derive"] }
 directories = "5.0"
-owo-colors = "3"
+owo-colors = { version = "3", features = ["supports-colors"] }
 rpassword = "7.3"
 rprompt = "2.1"
 tabled = { version = "0.14", features = ["color"] }

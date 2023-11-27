@@ -5,6 +5,7 @@ use anyhow::anyhow;
 use anyhow::Context;
 use anyhow::Result;
 use owo_colors::OwoColorize;
+use owo_colors::Stream::Stdout;
 use serde::Deserialize;
 use serde::Serialize;
 
@@ -101,14 +102,23 @@ fn parse_config_file(config_path: &Option<String>) -> Result<BitUserPartial> {
     if config.is_empty() {
         Err(anyhow!(
             "config file `{}` not found, available paths can be found with `{}`",
-            "bit-user.json".underline(),
-            "bitsrun config-paths".cyan().bold().underline()
+            "bit-user.json".if_supports_color(Stdout, |t| t.underline()),
+            "bitsrun config-paths".if_supports_color(Stdout, |t| t.cyan())
         ))
     } else {
-        let user_str_from_file = fs::read_to_string(&config)
-            .with_context(|| format!("failed to read config file `{}`", &config.underline()))?;
+        let user_str_from_file = fs::read_to_string(&config).with_context(|| {
+            format!(
+                "failed to read config file `{}`",
+                &config.if_supports_color(Stdout, |t| t.underline())
+            )
+        })?;
         let user_from_file = serde_json::from_str::<BitUserPartial>(&user_str_from_file)
-            .with_context(|| format!("failed to parse config file `{}`", &config.underline()))?;
+            .with_context(|| {
+                format!(
+                    "failed to parse config file `{}`",
+                    &config.if_supports_color(Stdout, |t| t.underline())
+                )
+            })?;
         Ok(user_from_file)
     }
 }
@@ -130,15 +140,21 @@ pub fn get_bit_user(
         let mut user_from_file = BitUserPartial::default();
         match parse_config_file(config_path) {
             Ok(value) => user_from_file = value,
-            Err(e) => println!("{} {}", "warning:".yellow(), e),
+            Err(e) => println!(
+                "{} {}",
+                "warning:".if_supports_color(Stdout, |t| t.yellow()),
+                e
+            ),
         }
 
         match user_from_file.username {
             Some(username) => bit_user.username.get_or_insert(username),
             None => bit_user.username.get_or_insert_with(|| {
-                rprompt::prompt_reply("-> please enter your campus id: ".dimmed())
-                    .with_context(|| "failed to read username")
-                    .unwrap()
+                rprompt::prompt_reply(
+                    "-> please enter your campus id: ".if_supports_color(Stdout, |t| t.dimmed()),
+                )
+                .with_context(|| "failed to read username")
+                .unwrap()
             }),
         };
 
@@ -146,9 +162,11 @@ pub fn get_bit_user(
             Some(password) => bit_user.password.get_or_insert(password),
             None => bit_user.password.get_or_insert_with(|| {
                 if require_password {
-                    rpassword::prompt_password("-> please enter your password: ".dimmed())
-                        .with_context(|| "failed to read password")
-                        .unwrap()
+                    rpassword::prompt_password(
+                        "-> please enter your password: ".if_supports_color(Stdout, |t| t.dimmed()),
+                    )
+                    .with_context(|| "failed to read password")
+                    .unwrap()
                 } else {
                     "".into()
                 }

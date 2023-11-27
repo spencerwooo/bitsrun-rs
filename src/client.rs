@@ -10,6 +10,7 @@ use hmac::Mac;
 use md5::Digest;
 use md5::Md5;
 use owo_colors::OwoColorize;
+use owo_colors::Stream::Stdout;
 use reqwest::Client;
 
 use serde::Deserialize;
@@ -121,19 +122,27 @@ pub async fn get_login_state(client: &Client) -> Result<SrunLoginState> {
 
 /// Get the ac_id of the current device
 async fn get_acid(client: &Client) -> Result<String> {
-    let resp = client
-        .get(SRUN_PORTAL)
-        .send()
-        .await
-        .with_context(|| format!("failed to get ac_id from `{}`", SRUN_PORTAL.underline()))?;
+    let resp = client.get(SRUN_PORTAL).send().await.with_context(|| {
+        format!(
+            "failed to get ac_id from `{}`",
+            SRUN_PORTAL.if_supports_color(Stdout, |t| t.underline())
+        )
+    })?;
     let redirect_url = resp.url().to_string();
-    let parsed_url = url::Url::parse(&redirect_url)
-        .with_context(|| format!("failed to parse url `{}`", redirect_url.underline()))?;
+    let parsed_url = url::Url::parse(&redirect_url).with_context(|| {
+        format!(
+            "failed to parse url `{}`",
+            redirect_url.if_supports_color(Stdout, |t| t.underline())
+        )
+    })?;
 
     let mut query = parsed_url.query_pairs().into_owned();
-    let ac_id = query
-        .find(|(key, _)| key == "ac_id")
-        .with_context(|| format!("failed to get ac_id from `{}`", redirect_url.underline()))?;
+    let ac_id = query.find(|(key, _)| key == "ac_id").with_context(|| {
+        format!(
+            "failed to get ac_id from `{}`",
+            redirect_url.if_supports_color(Stdout, |t| t.underline())
+        )
+    })?;
     Ok(ac_id.1)
 }
 
@@ -215,7 +224,10 @@ impl SrunClient {
         if self.login_state.error == "ok" {
             bail!(
                 "{} already logged in",
-                self.login_state.online_ip.to_string().underline()
+                self.login_state
+                    .online_ip
+                    .to_string()
+                    .if_supports_color(Stdout, |t| t.underline())
             )
         }
 
@@ -286,7 +298,12 @@ impl SrunClient {
     pub async fn logout(&self) -> Result<SrunPortalResponse> {
         // check if already logged out
         if self.login_state.error == "not_online_error" {
-            bail!("{} already logged out", self.ip.to_string().underline())
+            bail!(
+                "{} already logged out",
+                self.ip
+                    .to_string()
+                    .if_supports_color(Stdout, |t| t.underline())
+            )
         }
 
         // check if username match
@@ -294,7 +311,7 @@ impl SrunClient {
         if logged_in_username != self.username {
             println!(
                 "{} logged in user {} does not match yourself {}",
-                "warning:".yellow(),
+                "warning:".if_supports_color(Stdout, |t| t.yellow()),
                 format!("({})", logged_in_username).dimmed(),
                 format!("({})", self.username).dimmed()
             );
@@ -302,7 +319,7 @@ impl SrunClient {
             // tip to provide user override
             println!(
                 "{:>8} provide username argument {} to override and logout current session",
-                "tip:".cyan(),
+                "tip:".if_supports_color(Stdout, |t| t.cyan()),
                 format!("`--user {}`", logged_in_username)
                     .bold()
                     .bright_green()
@@ -314,9 +331,13 @@ impl SrunClient {
         if logged_in_ip != self.ip {
             println!(
                 "{} logged in ip (`{}`) does not match `{}`",
-                "warning:".yellow(),
-                logged_in_ip.to_string().underline(),
-                self.ip.to_string().underline()
+                "warning:".if_supports_color(Stdout, |t| t.yellow()),
+                logged_in_ip
+                    .to_string()
+                    .if_supports_color(Stdout, |t| t.underline()),
+                self.ip
+                    .to_string()
+                    .if_supports_color(Stdout, |t| t.underline())
             );
         }
 

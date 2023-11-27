@@ -4,68 +4,128 @@ on:
   workflow_dispatch:
   push:
     tags:
-      - "*"
+      - 'v[0-9]+.[0-9]+.[0-9]+'
+
+permissions:
+  actions: read
+  contents: write
 
 jobs:
   build:
-    name: Build and publish release
-    runs-on: ubuntu-latest
+    name: Release for ${{ matrix.target }}
+    runs-on: ${{ matrix.os }}
+
+    # Prevent job from running on forks
+    if: ${{ !github.event.repository.fork }}
+
     strategy:
       fail-fast: false
       matrix:
+        target:
+          - x86_64-unknown-linux-gnu
+          - x86_64-unknown-linux-musl
+          # - aarch64-unknown-linux-gnu
+          # - aarch64-unknown-linux-musl
+          - x86_64-pc-windows-msvc
+          - i686-pc-windows-msvc
+          - x86_64-apple-darwin
+          - aarch64-apple-darwin
+
         include:
           - target: x86_64-unknown-linux-gnu
-            name: bitsrun-x86_64-unknown-linux-gnu.tar.gz
+            os: ubuntu-22.04
+            target-apt-arch: amd64
             cross: false
-            strip: true
           - target: x86_64-unknown-linux-musl
-            name: bitsrun-x86_64-unknown-linux-musl.tar.gz
-            cross: true
-            strip: true
-          - target: i686-unknown-linux-gnu
-            name: bitsrun-i686-unknown-linux-gnu.tar.gz
-            cross: true
-            strip: true
-          - target: i686-unknown-linux-musl
-            name: bitsrun-i686-unknown-linux-musl.tar.gz
-            cross: true
-            strip: true
-          - target: aarch64-unknown-linux-gnu
-            name: bitsrun-aarch64-unknown-linux-gnu.tar.gz
-            cross: true
-            strip: false
-          - target: aarch64-unknown-linux-musl
-            name: bitsrun-aarch64-unknown-linux-musl.tar.gz
-            cross: true
-            strip: false
+            os: ubuntu-22.04
+            target-apt-arch: amd64
+            cross: false
+          # - target: aarch64-unknown-linux-gnu
+          #   os: ubuntu-22.04
+          #   target-apt-arch: arm64
+          #   cross: true
+          # - target: aarch64-unknown-linux-musl
+          #   os: ubuntu-22.04
+          #   target-apt-arch: arm64
+          #   cross: true
+          - target: x86_64-pc-windows-msvc
+            os: windows-latest
+            cross: false
+          - target: i686-pc-windows-msvc
+            os: windows-latest
+            cross: false
+          - target: x86_64-apple-darwin
+            os: macos-latest
+            cross: false
+          - target: aarch64-apple-darwin
+            os: macos-latest
+            cross: false
+
+    env:
+      BIN_NAME: bitsrun
+      CARGO_BUILD_TARGET: ${{ matrix.target }}
+      ARCHIVE_NAME: bitsrun-${{ matrix.target }}
 
     steps:
       - uses: actions/checkout@master
-      - uses: dtolnay/rust-toolchain@stable
+
+      - name: Set up Ubuntu multiarch
+        if: startsWith(matrix.os, 'ubuntu') && matrix.target-apt-arch != 'amd64'
+        run: |
+          readonly DISTRO_CODENAME=jammy
+          sudo dpkg --add-architecture "${{ matrix.target-apt-arch }}"
+          sudo sed -i "s/^deb http/deb [arch=$(dpkg-architecture -q DEB_HOST_ARCH)] http/" /etc/apt/sources.list
+          sudo sed -i "s/^deb mirror/deb [arch=$(dpkg-architecture -q DEB_HOST_ARCH)] mirror/" /etc/apt/sources.list
+          for suite in '' '-updates' '-backports' '-security'; do
+            echo "deb [arch=${{ matrix.target-apt-arch }}] http://ports.ubuntu.com/ $DISTRO_CODENAME$suite main universe multiverse" | \
+            sudo tee -a /etc/apt/sources.list >/dev/null
+          done
+
+      - name: Install musl development files
+        if: endsWith(matrix.target, '-musl')
+        run: |
+          sudo apt-get -yq update
+          sudo apt-get -yq install musl-tools musl-dev:${{ matrix.target-apt-arch }}
+
+      - name: Install QEMU and AArch64 cross compiler
+        if: startsWith(matrix.target, 'aarch64-unknown-linux')
+        run: |
+          sudo apt-get -yq update
+          # libc6 must be present to run executables dynamically linked
+          # against glibc for the target architecture
+          sudo apt-get -yq install qemu-user gcc-aarch64-linux-gnu libc6:arm64
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
         with:
-          target: ${{ matrix.target }}
+          target: ${{ env.CARGO_BUILD_TARGET }}
 
       - name: Build binaries
-        uses: ClementTsang/cargo-action@v0.0.6
-        with:
-          command: build
-          args: --release --target=${{ matrix.target }}
-          use-cross: ${{ matrix.cross }}
+        run: cargo build --release --target=${{ env.CARGO_BUILD_TARGET }}
 
-      - name: Strip binaries
-        run: strip target/${{ matrix.target }}/release/bitsrun
-        if: ${{ matrix.strip }}
+      - name: Strip binaries for Linux and macOS
+        if: endsWith(env.CARGO_BUILD_TARGET, '-windows-msvc') == false
+        run: strip target/${{ env.CARGO_BUILD_TARGET }}/release/${{ env.BIN_NAME }}
 
-      - name: Package binaries
+      - name: Package binary archives (for Windows)
+        if: endsWith(env.CARGO_BUILD_TARGET, '-windows-msvc')
         run: |
-          cd target/${{ matrix.target }}/release
-          tar -czvf ${{ matrix.name }} bitsrun
-          cd -
+          New-Item -ItemType Directory -Force -Path ${{ env.ARCHIVE_NAME }}
+          Copy-Item -Path "target/${{ env.CARGO_BUILD_TARGET }}/release/${{ env.BIN_NAME }}.exe" -Destination "${{ env.ARCHIVE_NAME }}/"
+          Compress-Archive -Path "${{ env.ARCHIVE_NAME }}/*" -DestinationPath "${{ env.ARCHIVE_NAME }}.zip"
 
-      - name: Upload binaries to release
+      - name: Package binary archives (for Linux and macOS)
+        if: endsWith(env.CARGO_BUILD_TARGET, '-windows-msvc') == false
+        run: |
+          mkdir "${{ env.ARCHIVE_NAME }}"
+          cp target/${{ env.CARGO_BUILD_TARGET }}/release/${{ env.BIN_NAME }} "${{ env.ARCHIVE_NAME }}"
+          chmod ugo+x "${{ env.ARCHIVE_NAME }}/${{ env.BIN_NAME }}"
+          tar -vczf "${{ env.ARCHIVE_NAME }}.tar.gz" "${{ env.ARCHIVE_NAME }}"/*
+
+      - name: Upload binary for release
         uses: svenstaro/upload-release-action@v2
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
-          file: target/${{ matrix.target }}/release/${{ matrix.name }}
-          asset_name: ${{ matrix.name }}
+          file: ${{ env.ARCHIVE_NAME }}${{ endsWith(env.CARGO_BUILD_TARGET, '-windows-msvc') && '.zip' || '.tar.gz'}}
+          asset_name: ${{env.ARCHIVE_NAME}}-${{ github.ref_name }}${{ endsWith(env.CARGO_BUILD_TARGET, '-windows-msvc') && '.zip' || '.tar.gz'}}
           tag: ${{ github.ref }}

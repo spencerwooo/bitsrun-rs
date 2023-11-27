@@ -6,6 +6,8 @@
 
 🌐 A headless login and logout CLI app for 10.0.0.55 at BIT, now in Rust.
 
+![screenshot](https://github.com/spencerwooo/bitsrun-rs/assets/32114380/011e7591-1474-4df8-a371-7a9da7629959)
+
 ## Usage
 
 ```shell

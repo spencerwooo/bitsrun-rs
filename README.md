@@ -3,14 +3,27 @@
 [![CI](https://github.com/spencerwooo/bitsrun-rs/actions/workflows/ci.yml/badge.svg)](https://github.com/spencerwooo/bitsrun-rs/actions/workflows/ci.yml)
 [![Release](https://github.com/spencerwooo/bitsrun-rs/actions/workflows/release.yml/badge.svg)](https://github.com/spencerwooo/bitsrun-rs/actions/workflows/release.yml)
 [![GitHub release (with filter)](https://img.shields.io/github/v/release/spencerwooo/bitsrun-rs)](https://github.com/spencerwooo/bitsrun-rs/releases/latest)
+[![Crates.io](https://img.shields.io/crates/v/bitsrun?color=rgb(221%2C%20170%2C%2071))](https://crates.io/crates/bitsrun)
 
 🌐 A headless login and logout CLI app for 10.0.0.55 at BIT, now in Rust.
 
 ![screenshot](https://github.com/spencerwooo/bitsrun-rs/assets/32114380/011e7591-1474-4df8-a371-7a9da7629959)
 
-## Installation
+## Install
 
-Download the latest binary from [GitHub Releases](https://github.com/spencerwooo/bitsrun-rs/releases/latest).
+#### One-line install (Linux / macOS, recommended)
+
+- `curl -fsSL https://cdn.jsdelivr.net/gh/spencerwooo/bitsrun-rs/install.sh | sh -`
+
+#### Cargo
+
+- `cargo install bitsrun`
+
+#### Download binary
+
+- Download the latest binary from [Releases](https://github.com/spencerwooo/bitsrun-rs/releases/latest).
+- Uncompress file: `tar -xvf <file>.tar.gz`
+- Move binary to `$PATH`, such as: `mv <file>/bitsrun ~/.local/bin/`
 
 ## Usage
 
@@ -62,7 +75,16 @@ Options:
 
 ## Credentials
 
-User credentials are stored in config file `bit-user.json`. Available config file paths can be listed with:
+To save your credentials, create config file `bit-user.json` under an available config path as:
+
+```json
+{
+  "username": "<username>",
+  "password": "<password>"
+}
+```
+
+Available config file paths can be listed with:
 
 ```console
 $ bitsrun config-paths

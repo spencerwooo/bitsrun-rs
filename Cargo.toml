@@ -8,7 +8,7 @@ homepage = "https://github.com/spencerwooo/bitsrun-rs"
 documentation = "https://github.com/spencerwooo/bitsrun-rs"
 repository = "https://github.com/spencerwooo/bitsrun-rs"
 readme = "README.md"
-keywords = ["bit", "bitsrun", "srun", "srun-client", "srun-login", "beijing-institute-of-technology"]
+keywords = ["bit", "bitsrun", "srun", "srun-client", "srun-login"]
 categories = ["command-line-utilities"]
 
 [dependencies]

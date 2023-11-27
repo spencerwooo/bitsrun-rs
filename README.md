@@ -10,8 +10,8 @@
 
 ## Usage
 
-```shell
-❯ bitsrun help
+```console
+$ bitsrun help
 A headless login and logout CLI app for 10.0.0.55 at BIT
 
 Usage: bitsrun [OPTIONS] [COMMAND]
@@ -31,4 +31,4 @@ Options:
 
 ## License
 
-[MIT](./LICENSE).
+[MIT](./LICENSE)

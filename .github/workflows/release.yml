@@ -24,8 +24,8 @@ jobs:
         target:
           - x86_64-unknown-linux-gnu
           - x86_64-unknown-linux-musl
-          # - aarch64-unknown-linux-gnu
-          # - aarch64-unknown-linux-musl
+          - aarch64-unknown-linux-gnu
+          - aarch64-unknown-linux-musl
           - x86_64-pc-windows-msvc
           - i686-pc-windows-msvc
           - x86_64-apple-darwin
@@ -35,31 +35,23 @@ jobs:
           - target: x86_64-unknown-linux-gnu
             os: ubuntu-22.04
             target-apt-arch: amd64
-            cross: false
           - target: x86_64-unknown-linux-musl
             os: ubuntu-22.04
             target-apt-arch: amd64
-            cross: false
-          # - target: aarch64-unknown-linux-gnu
-          #   os: ubuntu-22.04
-          #   target-apt-arch: arm64
-          #   cross: true
-          # - target: aarch64-unknown-linux-musl
-          #   os: ubuntu-22.04
-          #   target-apt-arch: arm64
-          #   cross: true
+          - target: aarch64-unknown-linux-gnu
+            os: ubuntu-22.04
+            target-apt-arch: arm64
+          - target: aarch64-unknown-linux-musl
+            os: ubuntu-22.04
+            target-apt-arch: arm64
           - target: x86_64-pc-windows-msvc
             os: windows-latest
-            cross: false
           - target: i686-pc-windows-msvc
             os: windows-latest
-            cross: false
           - target: x86_64-apple-darwin
             os: macos-latest
-            cross: false
           - target: aarch64-apple-darwin
             os: macos-latest
-            cross: false
 
     env:
       BIN_NAME: bitsrun
@@ -93,7 +85,7 @@ jobs:
           sudo apt-get -yq update
           # libc6 must be present to run executables dynamically linked
           # against glibc for the target architecture
-          sudo apt-get -yq install qemu-user gcc-aarch64-linux-gnu libc6:arm64
+          sudo apt-get -yq install qemu-user crossbuild-essential-arm64 libc6:arm64
 
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@stable
@@ -102,10 +94,6 @@ jobs:
 
       - name: Build binaries
         run: cargo build --release --target=${{ env.CARGO_BUILD_TARGET }}
-
-      - name: Strip binaries for Linux and macOS
-        if: endsWith(env.CARGO_BUILD_TARGET, '-windows-msvc') == false
-        run: strip target/${{ env.CARGO_BUILD_TARGET }}/release/${{ env.BIN_NAME }}
 
       - name: Package binary archives (for Windows)
         if: endsWith(env.CARGO_BUILD_TARGET, '-windows-msvc')

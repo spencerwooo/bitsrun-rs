@@ -69,6 +69,7 @@ async fn cli() -> Result<()> {
                 &client_args.username,
                 &client_args.password,
                 &client_args.config,
+                !matches!(args.command, Some(Commands::Logout(_))),
             )
             .with_context(|| "unable to parse user credentials")?;
 
@@ -80,7 +81,7 @@ async fn cli() -> Result<()> {
             )
             .await?;
 
-            if let Some(Commands::Login(_)) = &args.command {
+            if matches!(args.command, Some(Commands::Login(_))) {
                 let resp = srun_client.login().await?;
                 match resp.error.as_str() {
                     "ok" => println!(
@@ -101,7 +102,7 @@ async fn cli() -> Result<()> {
                     let pretty_json = serde_json::to_string_pretty(&resp)?;
                     println!("{} response from API\n{}", "bitsrun:".blue(), pretty_json);
                 }
-            } else if let Some(Commands::Logout(_)) = &args.command {
+            } else if matches!(args.command, Some(Commands::Logout(_))) {
                 let resp = srun_client.logout().await?;
                 match resp.error.as_str() {
                     "ok" => println!(

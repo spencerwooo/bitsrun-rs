@@ -114,15 +114,19 @@ fn parse_config_file(config_path: &Option<String>) -> Result<BitUserPartial> {
 }
 
 /// Get campus network user credentials from command line arguments or config file
+///
+/// Note that when logging out, `password` is not required.
+/// In this case, `require_password` should be set to `false`.
 pub fn get_bit_user(
     username: &Option<String>,
     password: &Option<String>,
     config_path: &Option<String>,
+    require_password: bool,
 ) -> Result<BitUser> {
     let mut bit_user = BitUserPartial::new(username, password);
 
     // username and password priority: command line > config file > prompt
-    if bit_user.username.is_none() | bit_user.password.is_none() {
+    if bit_user.username.is_none() | (require_password & bit_user.password.is_none()) {
         let mut user_from_file = BitUserPartial::default();
         match parse_config_file(config_path) {
             Ok(value) => user_from_file = value,
@@ -141,9 +145,13 @@ pub fn get_bit_user(
         match user_from_file.password {
             Some(password) => bit_user.password.get_or_insert(password),
             None => bit_user.password.get_or_insert_with(|| {
-                rpassword::prompt_password("-> please enter your password: ".dimmed())
-                    .with_context(|| "failed to read password")
-                    .unwrap()
+                if require_password {
+                    rpassword::prompt_password("-> please enter your password: ".dimmed())
+                        .with_context(|| "failed to read password")
+                        .unwrap()
+                } else {
+                    "".into()
+                }
             }),
         };
     }

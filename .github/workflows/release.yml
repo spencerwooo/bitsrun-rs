@@ -135,5 +135,5 @@ jobs:
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
           file: target/${{ env.CARGO_BUILD_TARGET }}/debian/${{ env.BIN_NAME }}_${{ steps.get_version.outputs.version }}-1_${{ matrix.target-apt-arch }}.deb
-          asset_name: ${{ env.BIN_NAME }}_${{ github.ref_name }}_${{ matrix.target-apt-arch }}.deb
+          asset_name: ${{ env.ARCHIVE_NAME }}_${{ steps.get_version.outputs.version }}-1_${{ matrix.target-apt-arch }}.deb
           tag: ${{ github.ref }}

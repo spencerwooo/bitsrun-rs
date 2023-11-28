@@ -1,5 +1,6 @@
 use std::env;
 use std::fs;
+use std::os::unix::fs::MetadataExt;
 
 use anyhow::anyhow;
 use anyhow::Context;
@@ -88,39 +89,65 @@ pub fn enumerate_config_paths() -> Vec<String> {
 /// Parse credentials from config file
 fn parse_config_file(config_path: &Option<String>) -> Result<BitUserPartial> {
     let mut config = String::new();
-    if config_path.is_some() {
-        config = config_path.clone().unwrap();
-    } else {
-        for path in enumerate_config_paths() {
-            if fs::metadata(&path).is_ok() {
-                config = path;
-                break;
+    match &config_path {
+        Some(path) => config = path.to_owned(),
+        None => {
+            for path in enumerate_config_paths() {
+                if fs::metadata(&path).is_ok() {
+                    config = path;
+                    break;
+                }
             }
         }
     }
 
+    // check if file is valid (i.e., is a file and permissions are not too open)
+    let meta = fs::metadata(&config)?;
+    if !meta.is_file() {
+        return Err(anyhow!(
+            "`{}` is not a file",
+            &config.if_supports_color(Stdout, |t| t.underline())
+        ));
+    }
+    // file should only be read/writeable by the owner alone, i.e., 0o600
+    // note: this check is only performed on unix systems
+    if cfg!(unix) && meta.mode() & 0o777 != 0o600 {
+        return Err(anyhow!(
+            "`{}` has too open permissions {}, aborting!\n\
+            {}: set permissions to {} with `chmod 600 {}`",
+            &config.if_supports_color(Stdout, |t| t.underline()),
+            (meta.mode() & 0o777)
+                .to_string()
+                .if_supports_color(Stdout, |t| t.on_red()),
+            "tip".if_supports_color(Stdout, |t| t.green()),
+            "600".if_supports_color(Stdout, |t| t.on_cyan()),
+            &config
+        ));
+    }
+
+    // check if file is empty
     if config.is_empty() {
-        Err(anyhow!(
-            "config file `{}` not found, available paths can be found with `{}`",
+        return Err(anyhow!(
+            "file `{}` not found, available paths can be found with `{}`",
             "bit-user.json".if_supports_color(Stdout, |t| t.underline()),
             "bitsrun config-paths".if_supports_color(Stdout, |t| t.cyan())
-        ))
-    } else {
-        let user_str_from_file = fs::read_to_string(&config).with_context(|| {
+        ));
+    }
+
+    let user_str_from_file = fs::read_to_string(&config).with_context(|| {
+        format!(
+            "failed to read config file `{}`",
+            &config.if_supports_color(Stdout, |t| t.underline())
+        )
+    })?;
+    let user_from_file =
+        serde_json::from_str::<BitUserPartial>(&user_str_from_file).with_context(|| {
             format!(
-                "failed to read config file `{}`",
+                "failed to parse config file `{}`",
                 &config.if_supports_color(Stdout, |t| t.underline())
             )
         })?;
-        let user_from_file = serde_json::from_str::<BitUserPartial>(&user_str_from_file)
-            .with_context(|| {
-                format!(
-                    "failed to parse config file `{}`",
-                    &config.if_supports_color(Stdout, |t| t.underline())
-                )
-            })?;
-        Ok(user_from_file)
-    }
+    Ok(user_from_file)
 }
 
 /// Get campus network user credentials from command line arguments or config file
@@ -168,7 +195,8 @@ pub fn get_bit_user(
                     .with_context(|| "failed to read password")
                     .unwrap()
                 } else {
-                    "".into()
+                    // password is not required when logging out
+                    String::from("")
                 }
             }),
         };

@@ -10,6 +10,7 @@ repository = "https://github.com/spencerwooo/bitsrun-rs"
 readme = "README.md"
 keywords = ["bit", "bitsrun", "srun", "srun-client", "srun-login"]
 categories = ["command-line-utilities"]
+authors = ["Spencer Woo <spencer.woo@outlook.com>"]
 
 [dependencies]
 reqwest = { version = "0.11", features = [
@@ -37,3 +38,6 @@ chrono = "0.4"
 
 [profile.release]
 strip = "symbols"
+
+[package.metadata.deb]
+copyright = "2023 Spencer Woo"

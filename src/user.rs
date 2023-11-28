@@ -116,7 +116,9 @@ fn parse_config_file(config_path: &Option<String>) -> Result<BitUserPartial> {
             "`{}` has too open permissions {}, aborting!\n\
             {}: set permissions to {} with `chmod 600 {}`",
             &config.if_supports_color(Stdout, |t| t.underline()),
-            (meta.mode() & 0o777).to_string().if_supports_color(Stdout, |t| t.on_red()),
+            (meta.mode() & 0o777)
+                .to_string()
+                .if_supports_color(Stdout, |t| t.on_red()),
             "tip".if_supports_color(Stdout, |t| t.green()),
             "600".if_supports_color(Stdout, |t| t.on_cyan()),
             &config

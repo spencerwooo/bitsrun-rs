@@ -115,8 +115,8 @@ jobs:
           chmod ugo+x "${{ env.ARCHIVE_NAME }}/${{ env.BIN_NAME }}"
           tar -vczf "${{ env.ARCHIVE_NAME }}.tar.gz" "${{ env.ARCHIVE_NAME }}"/*
 
-      - name: Build and package deb
-        if: contains(env.CARGO_BUILD_TARGET, 'unknown-linux')
+      - name: Build and package deb (amd64)
+        if: startsWith(env.CARGO_BUILD_TARGET, 'x86_64-unknown-linux')
         run: |
           cargo install cargo-deb
           cargo deb --no-build --target ${{ env.CARGO_BUILD_TARGET }}
@@ -130,7 +130,7 @@ jobs:
           tag: ${{ github.ref }}
 
       - name: Upload deb for release
-        if: contains(env.CARGO_BUILD_TARGET, 'unknown-linux')
+        if: startsWith(env.CARGO_BUILD_TARGET, 'x86_64-unknown-linux')
         uses: svenstaro/upload-release-action@v2
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}

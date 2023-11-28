@@ -15,6 +15,11 @@
 
 - `curl -fsSL https://cdn.jsdelivr.net/gh/spencerwooo/bitsrun-rs/install.sh | sh -`
 
+#### Ubuntu / Debian
+
+- Download the latest `.deb` package from [Releases](https://github.com/spencerwooo/bitsrun-rs/releases/latest).
+- `sudo dpkg -i <file>.deb`
+
 #### Cargo
 
 - `cargo install bitsrun`

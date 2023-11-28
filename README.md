@@ -13,7 +13,7 @@
 
 #### One-line install (Linux / macOS, recommended)
 
-- `curl -fsSL https://cdn.jsdelivr.net/gh/spencerwooo/bitsrun-rs/install.sh | sh -`
+- `curl -fsSL https://cdn.jsdelivr.net/gh/spencerwooo/bitsrun-rs@main/install.sh | sh -`
 
 #### Cargo
 

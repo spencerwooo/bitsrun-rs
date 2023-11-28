@@ -102,6 +102,12 @@ bitsrun: list of possible config paths
 > [!NOTE]
 > The config file location is OS-dependent. Run the command to check the accepted locations on your system.
 
+**Set permissions of this file to `600` on Linux and macOS, or `bitsrun` will refuse to read it.**
+
+```console
+$ chmod 600 <path/to/bit-user.json>
+```
+
 ## Related
 
 - [`zu1k/srun`](https://github.com/zu1k/srun) - Srun authentication system login tools. (Rust)

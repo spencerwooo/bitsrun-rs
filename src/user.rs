@@ -1,6 +1,5 @@
 use std::env;
 use std::fs;
-use std::os::unix::fs::MetadataExt;
 
 use anyhow::anyhow;
 use anyhow::Context;
@@ -109,21 +108,36 @@ fn parse_config_file(config_path: &Option<String>) -> Result<BitUserPartial> {
             &config.if_supports_color(Stdout, |t| t.underline())
         ));
     }
+
     // file should only be read/writeable by the owner alone, i.e., 0o600
     // note: this check is only performed on unix systems
-    if cfg!(unix) && meta.mode() & 0o777 != 0o600 {
-        return Err(anyhow!(
-            "`{}` has too open permissions {}, aborting!\n\
-            {}: set permissions to {} with `chmod 600 {}`",
-            &config.if_supports_color(Stdout, |t| t.underline()),
-            (meta.mode() & 0o777)
-                .to_string()
-                .if_supports_color(Stdout, |t| t.on_red()),
-            "tip".if_supports_color(Stdout, |t| t.green()),
-            "600".if_supports_color(Stdout, |t| t.on_cyan()),
-            &config
-        ));
+    #[cfg(unix)]
+    fn check_permissions(config: &String, meta: &std::fs::Metadata) -> Result<(), anyhow::Error> {
+        use std::os::unix::fs::MetadataExt;
+        if meta.mode() & 0o777 != 0o600 {
+            return Err(anyhow!(
+                "`{}` has too open permissions {}, aborting!\n\
+                {}: set permissions to {} with `chmod 600 {}`",
+                &config.if_supports_color(Stdout, |t| t.underline()),
+                (meta.mode() & 0o777)
+                    .to_string()
+                    .if_supports_color(Stdout, |t| t.on_red()),
+                "tip".if_supports_color(Stdout, |t| t.green()),
+                "600".if_supports_color(Stdout, |t| t.on_cyan()),
+                &config
+            ));
+        }
+        Ok(())
     }
+
+    #[cfg(windows)]
+    #[allow(unused)]
+    fn check_permissions(_config: &String, _meta: &std::fs::Metadata) -> Result<(), anyhow::Error> {
+        // Windows doesn't support Unix-style permissions, so we'll just return Ok here.
+        Ok(())
+    }
+
+    check_permissions(&config, &meta)?;
 
     // check if file is empty
     if config.is_empty() {

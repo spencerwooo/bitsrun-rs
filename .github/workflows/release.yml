@@ -61,6 +61,11 @@ jobs:
     steps:
       - uses: actions/checkout@master
 
+      - name: Get version from cargo metadata on Linux
+        if: startsWith(matrix.os, 'ubuntu')
+        id: get_version
+        run: echo "version=$(cargo metadata --format-version 1 --no-deps | jq -r '.packages[] | select(.name == "bitsrun").version')" >> "$GITHUB_OUTPUT"
+
       - name: Set up Ubuntu multiarch
         if: startsWith(matrix.os, 'ubuntu') && matrix.target-apt-arch != 'amd64'
         run: |
@@ -110,10 +115,25 @@ jobs:
           chmod ugo+x "${{ env.ARCHIVE_NAME }}/${{ env.BIN_NAME }}"
           tar -vczf "${{ env.ARCHIVE_NAME }}.tar.gz" "${{ env.ARCHIVE_NAME }}"/*
 
+      - name: Build and package deb (amd64)
+        if: startsWith(env.CARGO_BUILD_TARGET, 'x86_64-unknown-linux')
+        run: |
+          cargo install cargo-deb
+          cargo deb --no-build --target ${{ env.CARGO_BUILD_TARGET }}
+
       - name: Upload binary for release
         uses: svenstaro/upload-release-action@v2
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
           file: ${{ env.ARCHIVE_NAME }}${{ endsWith(env.CARGO_BUILD_TARGET, '-windows-msvc') && '.zip' || '.tar.gz'}}
           asset_name: ${{env.ARCHIVE_NAME}}-${{ github.ref_name }}${{ endsWith(env.CARGO_BUILD_TARGET, '-windows-msvc') && '.zip' || '.tar.gz'}}
+          tag: ${{ github.ref }}
+
+      - name: Upload deb for release
+        if: startsWith(env.CARGO_BUILD_TARGET, 'x86_64-unknown-linux')
+        uses: svenstaro/upload-release-action@v2
+        with:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          file: target/${{ env.CARGO_BUILD_TARGET }}/debian/${{ env.BIN_NAME }}_${{ steps.get_version.outputs.version }}-1_${{ matrix.target-apt-arch }}.deb
+          asset_name: ${{ env.ARCHIVE_NAME }}_${{ steps.get_version.outputs.version }}-1_${{ matrix.target-apt-arch }}.deb
           tag: ${{ github.ref }}

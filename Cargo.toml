@@ -1,7 +1,7 @@
 [package]
 name = "bitsrun"
 description = "A headless login and logout CLI app for 10.0.0.55 at BIT"
-version = "0.1.1"
+version = "0.2.0"
 edition = "2021"
 license = "MIT"
 homepage = "https://github.com/spencerwooo/bitsrun-rs"
@@ -10,6 +10,7 @@ repository = "https://github.com/spencerwooo/bitsrun-rs"
 readme = "README.md"
 keywords = ["bit", "bitsrun", "srun", "srun-client", "srun-login"]
 categories = ["command-line-utilities"]
+authors = ["Spencer Woo <spencer.woo@outlook.com>"]
 
 [dependencies]
 reqwest = { version = "0.11", features = [
@@ -37,3 +38,6 @@ chrono = "0.4"
 
 [profile.release]
 strip = "symbols"
+
+[package.metadata.deb]
+copyright = "2023 Spencer Woo"

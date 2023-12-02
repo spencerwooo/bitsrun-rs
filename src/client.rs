@@ -310,27 +310,18 @@ impl SrunClient {
         let logged_in_username = self.login_state.user_name.clone().unwrap_or_default();
         if logged_in_username != self.username {
             println!(
-                "{} logged in user {} does not match yourself {}",
+                "{} logged in user {} does not match yourself {}, logging out anyway",
                 "warning:".if_supports_color(Stdout, |t| t.yellow()),
                 format!("({})", logged_in_username).dimmed(),
                 format!("({})", self.username).dimmed()
             );
-
-            // tip to provide user override
-            println!(
-                "{:>8} provide username argument {} to override and logout current session",
-                "tip:".if_supports_color(Stdout, |t| t.cyan()),
-                format!("`--user {}`", logged_in_username)
-                    .bold()
-                    .bright_green()
-            )
         }
 
         // check if ip match
         let logged_in_ip = self.login_state.online_ip;
         if logged_in_ip != self.ip {
             println!(
-                "{} logged in ip (`{}`) does not match `{}`",
+                "{} logged in ip (`{}`) does not match `{}`, things may not work as expected",
                 "warning:".if_supports_color(Stdout, |t| t.yellow()),
                 logged_in_ip
                     .to_string()
@@ -347,7 +338,7 @@ impl SrunClient {
             ("action", "logout"),
             ("ip", &self.ip.to_string()),
             ("ac_id", self.ac_id.as_str()),
-            ("username", self.username.as_str()),
+            ("username", logged_in_username.as_str()),
         ];
         let url = format!("{}/cgi-bin/srun_portal", SRUN_PORTAL);
 

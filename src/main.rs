@@ -128,7 +128,7 @@ async fn cli() -> Result<()> {
             } else if matches!(args.command, Some(Commands::Logout(_))) {
                 let resp = srun_client.logout().await?;
                 match resp.error.as_str() {
-                    "ok" => println!(
+                    "ok" | "logout_ok" => println!(
                         "{} {} logged out",
                         "bitsrun:".if_supports_color(Stdout, |t| t.green()),
                         resp.online_ip

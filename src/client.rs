@@ -357,7 +357,7 @@ impl SrunClient {
         if self.dm {
             use chrono::Utc;
             let timestamp = Utc::now().timestamp().to_string();
-            let unbind = String::from("0");
+            let unbind = String::from("1");
 
             let sign = {
                 let mut hasher = Sha1::new();

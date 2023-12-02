@@ -14,6 +14,7 @@ use serde::Serialize;
 pub struct BitUser {
     pub username: String,
     pub password: String,
+    pub dm: bool,
 }
 
 /// Partial campus network user credentials
@@ -21,13 +22,15 @@ pub struct BitUser {
 pub struct BitUserPartial {
     pub username: Option<String>,
     pub password: Option<String>,
+    pub dm: Option<bool>,
 }
 
 impl BitUserPartial {
-    pub fn new(username: &Option<String>, password: &Option<String>) -> Self {
+    pub fn new(username: &Option<String>, password: &Option<String>, dm: Option<bool>) -> Self {
         Self {
             username: username.clone(),
             password: password.clone(),
+            dm,
         }
     }
 }
@@ -132,7 +135,7 @@ fn parse_config_file(config_path: &Option<String>) -> Result<BitUserPartial> {
 
     #[cfg(windows)]
     #[allow(unused)]
-    fn check_permissions(_config: &String, _meta: &std::fs::Metadata) -> Result<(), anyhow::Error> {
+    fn check_permissions(_config: &str, _meta: &std::fs::Metadata) -> Result<(), anyhow::Error> {
         // Windows doesn't support Unix-style permissions, so we'll just return Ok here.
         Ok(())
     }
@@ -171,10 +174,11 @@ fn parse_config_file(config_path: &Option<String>) -> Result<BitUserPartial> {
 pub fn get_bit_user(
     username: &Option<String>,
     password: &Option<String>,
+    dm: bool,
     config_path: &Option<String>,
     require_password: bool,
 ) -> Result<BitUser> {
-    let mut bit_user = BitUserPartial::new(username, password);
+    let mut bit_user = BitUserPartial::new(username, password, Some(dm));
 
     // username and password priority: command line > config file > prompt
     if bit_user.username.is_none() | (require_password & bit_user.password.is_none()) {
@@ -186,6 +190,20 @@ pub fn get_bit_user(
                 "warning:".if_supports_color(Stdout, |t| t.yellow()),
                 e
             ),
+        }
+
+        if user_from_file.dm.is_none() & !dm {
+            println!(
+                "{} logout endpoint not specified in config file! \
+                logging out may encounter unexpected results",
+                "warning:".if_supports_color(Stdout, |t| t.yellow()),
+            );
+            println!(
+                "{} if this device is a '{}', explicity specify `{}` to use alternative logout endpoint",
+                "warning:".if_supports_color(Stdout, |t| t.yellow()),
+                "registered dumb terminal".if_supports_color(Stdout, |t| t.on_yellow()),
+                "--dm".if_supports_color(Stdout, |t| t.underline())
+            );
         }
 
         match user_from_file.username {
@@ -219,5 +237,6 @@ pub fn get_bit_user(
     Ok(BitUser {
         username: bit_user.username.unwrap_or_default(),
         password: bit_user.password.unwrap_or_default(),
+        dm: bit_user.dm.unwrap_or_default(),
     })
 }

@@ -6,15 +6,15 @@ mod xencode;
 
 use anyhow::Context;
 use anyhow::Result;
-use cli::Arguments;
-use cli::Commands;
-use client::get_login_state;
-use client::SrunClient;
+use clap::Parser;
 use owo_colors::OwoColorize;
 use owo_colors::Stream::Stderr;
 use owo_colors::Stream::Stdout;
 
-use clap::Parser;
+use cli::Arguments;
+use cli::Commands;
+use client::get_login_state;
+use client::SrunClient;
 use tables::print_config_paths;
 use tables::print_login_state;
 
@@ -83,7 +83,7 @@ async fn cli() -> Result<()> {
                 &client_args.username,
                 &client_args.password,
                 &client_args.config,
-                !matches!(args.command, Some(Commands::Logout(_))),
+                matches!(args.command, Some(Commands::Login(_))),
             )
             .with_context(|| "unable to parse user credentials")?;
 

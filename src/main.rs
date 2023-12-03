@@ -22,9 +22,9 @@ use tables::print_login_state;
 async fn main() {
     if let Err(err) = cli().await {
         eprintln!(
-            "{} {} {}",
-            "bitsrun:".if_supports_color(Stderr, |t| t.bright_red()),
-            "[error]".if_supports_color(Stderr, |t| t.dimmed()),
+            "{} {}: {}",
+            "bitsrun".if_supports_color(Stderr, |t| t.bright_red()),
+            "(error)".if_supports_color(Stderr, |t| t.dimmed()),
             err
         );
         std::process::exit(1);

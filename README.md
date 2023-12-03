@@ -78,16 +78,19 @@ Options:
 > [!TIP]
 > Use environment variable `NO_COLOR=true` to disable colored output.
 
-## Credentials
+## Config and credentials
 
-To save your credentials, create config file `bit-user.json` under an available config path as:
+To save your credentials and configurations, create config file `bit-user.json` under an available config path as:
 
 ```json
 {
   "username": "<username>",
-  "password": "<password>"
+  "password": "<password>",
+  "dm": true
 }
 ```
+
+**`dm` is for specifying whether the current device is a dumb terminal, and requires logging out through the alternative endpoint. Set to `true` (no quotes!) if the device you are working with is a dumb terminal.**
 
 Available config file paths can be listed with:
 

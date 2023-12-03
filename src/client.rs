@@ -91,7 +91,7 @@ pub struct SrunLoginState {
 }
 
 /// Get the login state of the current device
-pub async fn get_login_state(client: &Client) -> Result<SrunLoginState> {
+pub async fn get_login_state(client: &Client, verbose: bool) -> Result<SrunLoginState> {
     // call /rad_user_info with callback=jsonp to get the login state
     let params = [("callback", "jsonp")];
     let url = format!("{}/cgi-bin/rad_user_info", SRUN_PORTAL);
@@ -103,13 +103,21 @@ pub async fn get_login_state(client: &Client) -> Result<SrunLoginState> {
         .send()
         .await
         .with_context(|| "failed to get login state")?;
-    let text = resp.text().await?;
+    let raw_text = resp.text().await?;
+
+    if verbose {
+        println!(
+            "{} response from portal:\n{}",
+            "bitsrun:".if_supports_color(Stdout, |t| t.blue()),
+            raw_text
+        );
+    }
 
     // valid json starts at index 6 and ends at the second to last character
-    if text.len() < 8 {
-        bail!("login status response too short: `{}`", text)
+    if raw_text.len() < 8 {
+        bail!("login status response too short: `{}`", raw_text)
     }
-    let raw_json = &text[6..text.len() - 1];
+    let raw_json = &raw_text[6..raw_text.len() - 1];
     let parsed_json = serde_json::from_str::<SrunLoginState>(raw_json).with_context(|| {
         format!(
             "failed to parse malformed login status response:\n  {}",
@@ -206,7 +214,7 @@ impl SrunClient {
     ) -> Result<SrunClient> {
         let http_client = http_client.unwrap_or_default();
         let ac_id = get_acid(&http_client).await?;
-        let login_state = get_login_state(&http_client).await?;
+        let login_state = get_login_state(&http_client, false).await?;
         let ip = ip.unwrap_or(login_state.online_ip);
         Ok(SrunClient {
             http_client,
@@ -219,9 +227,9 @@ impl SrunClient {
     }
 
     /// Login to the SRUN portal
-    pub async fn login(&self) -> Result<SrunPortalResponse> {
+    pub async fn login(&self, force: bool, verbose: bool) -> Result<SrunPortalResponse> {
         // check if already logged in
-        if self.login_state.error == "ok" {
+        if (self.login_state.error == "ok") & !force {
             bail!(
                 "{} already logged in",
                 self.login_state
@@ -286,6 +294,14 @@ impl SrunClient {
             .with_context(|| "failed to send request when logging in")?;
         let raw_text = resp.text().await?;
 
+        if verbose {
+            println!(
+                "{} response from portal:\n{}",
+                "bitsrun:".if_supports_color(Stdout, |t| t.blue()),
+                raw_text
+            );
+        }
+
         if raw_text.len() < 8 {
             bail!("login response too short: `{}`", raw_text)
         }
@@ -295,9 +311,9 @@ impl SrunClient {
     }
 
     /// Logout of the SRUN portal
-    pub async fn logout(&self) -> Result<SrunPortalResponse> {
+    pub async fn logout(&self, force: bool, verbose: bool) -> Result<SrunPortalResponse> {
         // check if already logged out
-        if self.login_state.error == "not_online_error" {
+        if (self.login_state.error == "not_online_error") & !force {
             bail!(
                 "{} already logged out",
                 self.ip
@@ -350,6 +366,18 @@ impl SrunClient {
             .await
             .with_context(|| "failed to send request when logging out")?;
         let raw_text = resp.text().await?;
+
+        if verbose {
+            println!(
+                "{} response from portal:\n{}",
+                "bitsrun:".if_supports_color(Stdout, |t| t.blue()),
+                raw_text
+            );
+        }
+
+        if raw_text.len() < 8 {
+            bail!("login response too short: `{}`", raw_text)
+        }
         let raw_json = &raw_text[6..raw_text.len() - 1];
         serde_json::from_str::<SrunPortalResponse>(raw_json)
             .with_context(|| format!("failed to parse malformed logout response:\n  {}", raw_json))

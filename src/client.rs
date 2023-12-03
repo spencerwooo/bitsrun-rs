@@ -107,9 +107,9 @@ pub async fn get_login_state(client: &Client, verbose: bool) -> Result<SrunLogin
 
     if verbose {
         println!(
-            "{} response from portal:\n{}",
+            "{} status response from portal:\n{}",
             "bitsrun:".if_supports_color(Stdout, |t| t.blue()),
-            raw_text
+            raw_text.if_supports_color(Stdout, |t| t.dimmed())
         );
     }
 
@@ -246,7 +246,7 @@ impl SrunClient {
         }
 
         // construct checksum and crypto encodings
-        let token = self.get_challenge().await?;
+        let token = self.get_challenge(verbose).await?;
 
         let chksum_data = json!({
             "username": self.username.clone(),
@@ -302,9 +302,9 @@ impl SrunClient {
 
         if verbose {
             println!(
-                "{} response from portal:\n{}",
+                "{} login response from portal:\n{}",
                 "bitsrun:".if_supports_color(Stdout, |t| t.blue()),
-                raw_text
+                raw_text.if_supports_color(Stdout, |t| t.dimmed())
             );
         }
 
@@ -405,9 +405,9 @@ impl SrunClient {
 
         if verbose {
             println!(
-                "{} response from portal:\n{}",
+                "{} logout response from portal:\n{}",
                 "bitsrun:".if_supports_color(Stdout, |t| t.blue()),
-                raw_text
+                raw_text.if_supports_color(Stdout, |t| t.dimmed())
             );
         }
 
@@ -419,7 +419,7 @@ impl SrunClient {
             .with_context(|| format!("failed to parse malformed logout response:\n  {}", raw_json))
     }
 
-    async fn get_challenge(&self) -> Result<String> {
+    async fn get_challenge(&self, verbose: bool) -> Result<String> {
         let params = [
             ("callback", "jsonp"),
             ("username", self.username.as_str()),
@@ -435,6 +435,14 @@ impl SrunClient {
             .await
             .with_context(|| "failed to get challenge")?;
         let raw_text = resp.text().await?;
+
+        if verbose {
+            println!(
+                "{} challenge response from portal:\n{}",
+                "bitsrun:".if_supports_color(Stdout, |t| t.blue()),
+                raw_text.if_supports_color(Stdout, |t| t.dimmed())
+            );
+        }
 
         if raw_text.len() < 8 {
             bail!("logout response too short: `{}`", raw_text)

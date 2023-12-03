@@ -41,39 +41,43 @@ async fn cli() -> Result<()> {
     match &args.command {
         // check login status
         Some(Commands::Status(status_args)) => {
-            let login_state = get_login_state(&http_client).await?;
+            // only verbose on args.verbose = true and not outputting json
+            let login_state = get_login_state(&http_client, args.verbose).await?;
 
             // output json
-            if status_args.json {
+            if status_args.json & !args.verbose {
                 let raw_json = serde_json::to_string(&login_state)?;
                 println!("{}", raw_json);
                 return Ok(());
             }
 
             // output human readable
-            if login_state.error == "ok" {
-                println!(
-                    "{} {} {} is online",
-                    "bitsrun:".if_supports_color(Stdout, |t| t.bright_green()),
-                    &login_state
-                        .online_ip
-                        .to_string()
-                        .if_supports_color(Stdout, |t| t.underline()),
-                    format!("({})", login_state.user_name.clone().unwrap_or_default())
-                        .if_supports_color(Stdout, |t| t.dimmed())
-                );
+            match login_state.error.as_str() {
+                "ok" => {
+                    println!(
+                        "{} {} {} is online",
+                        "bitsrun:".if_supports_color(Stdout, |t| t.bright_green()),
+                        &login_state
+                            .online_ip
+                            .to_string()
+                            .if_supports_color(Stdout, |t| t.underline()),
+                        format!("({})", login_state.user_name.clone().unwrap_or_default())
+                            .if_supports_color(Stdout, |t| t.dimmed())
+                    );
 
-                // print status table
-                print_login_state(login_state);
-            } else {
-                println!(
-                    "{} {} is offline",
-                    "bitsrun:".if_supports_color(Stdout, |t| t.blue()),
-                    login_state
-                        .online_ip
-                        .to_string()
-                        .if_supports_color(Stdout, |t| t.underline())
-                );
+                    // print status table
+                    print_login_state(login_state);
+                }
+                _ => {
+                    println!(
+                        "{} {} is offline",
+                        "bitsrun:".if_supports_color(Stdout, |t| t.blue()),
+                        login_state
+                            .online_ip
+                            .to_string()
+                            .if_supports_color(Stdout, |t| t.underline())
+                    );
+                }
             }
         }
 
@@ -98,7 +102,7 @@ async fn cli() -> Result<()> {
             .await?;
 
             if matches!(args.command, Some(Commands::Login(_))) {
-                let resp = srun_client.login().await?;
+                let resp = srun_client.login(client_args.force, args.verbose).await?;
                 match resp.error.as_str() {
                     "ok" => println!(
                         "{} {} {} logged in",
@@ -116,17 +120,8 @@ async fn cli() -> Result<()> {
                         format!("({})", resp.error_msg).if_supports_color(Stdout, |t| t.dimmed())
                     ),
                 }
-
-                if args.verbose {
-                    let pretty_json = serde_json::to_string_pretty(&resp)?;
-                    println!(
-                        "{} response from API\n{}",
-                        "bitsrun:".if_supports_color(Stdout, |t| t.blue()),
-                        pretty_json
-                    );
-                }
             } else if matches!(args.command, Some(Commands::Logout(_))) {
-                let resp = srun_client.logout().await?;
+                let resp = srun_client.logout(client_args.force, args.verbose).await?;
                 match resp.error.as_str() {
                     "ok" | "logout_ok" => println!(
                         "{} {} logged out",
@@ -141,15 +136,6 @@ async fn cli() -> Result<()> {
                         resp.error,
                         format!("({})", resp.error_msg).if_supports_color(Stdout, |t| t.dimmed())
                     ),
-                }
-
-                if args.verbose {
-                    let pretty_json = serde_json::to_string_pretty(&resp)?;
-                    println!(
-                        "{} response from API\n{}",
-                        "bitsrun:".if_supports_color(Stdout, |t| t.blue()),
-                        pretty_json
-                    );
                 }
             }
         }

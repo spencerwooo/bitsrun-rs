@@ -58,4 +58,8 @@ pub struct ClientArgs {
     /// Optionally provide path to the config file
     #[arg(short, long)]
     pub config: Option<String>,
+
+    /// Force login/logout, don't check login status
+    #[arg(short, long)]
+    pub force: bool,
 }

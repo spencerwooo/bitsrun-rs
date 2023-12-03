@@ -42,8 +42,7 @@ async fn cli() -> Result<()> {
         // check login status
         Some(Commands::Status(status_args)) => {
             // only verbose on args.verbose = true and not outputting json
-            let login_state =
-                get_login_state(&http_client, args.verbose).await?;
+            let login_state = get_login_state(&http_client, args.verbose).await?;
 
             // output json
             if status_args.json & !args.verbose {

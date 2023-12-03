@@ -87,6 +87,7 @@ async fn cli() -> Result<()> {
             let bit_user = user::get_bit_user(
                 &client_args.username,
                 &client_args.password,
+                client_args.dm,
                 &client_args.config,
                 matches!(args.command, Some(Commands::Login(_))),
             )
@@ -97,6 +98,7 @@ async fn cli() -> Result<()> {
                 bit_user.password,
                 Some(http_client),
                 client_args.ip,
+                Some(client_args.dm),
             )
             .await?;
 
@@ -122,7 +124,7 @@ async fn cli() -> Result<()> {
             } else if matches!(args.command, Some(Commands::Logout(_))) {
                 let resp = srun_client.logout(client_args.force, args.verbose).await?;
                 match resp.error.as_str() {
-                    "ok" => println!(
+                    "ok" | "logout_ok" => println!(
                         "{} {} logged out",
                         "bitsrun:".if_supports_color(Stdout, |t| t.green()),
                         resp.online_ip

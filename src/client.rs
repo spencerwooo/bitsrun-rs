@@ -194,6 +194,7 @@ pub struct SrunClient {
     // srun portal info
     pub ip: IpAddr,
     pub ac_id: String,
+    pub dm: bool, // whether the device is authenticated with its mac address
     pub login_state: SrunLoginState,
 }
 
@@ -205,23 +206,28 @@ impl SrunClient {
     /// * `username` - The username of the SRUN account (student id)
     /// * `password` - The password of the SRUN account
     /// * `ip` - The IP address (`online_ip` from the login portal if not specified)
+    /// * `dm` - Whether the device is authenticated through the campus login portal with its mac
+    ///   address (important for dumb terminals!!!)
     /// * `http_client` - The http client to be used (a new one will be created if not specified)
     pub async fn new(
         username: String,
         password: String,
         http_client: Option<Client>,
         ip: Option<IpAddr>,
+        dm: Option<bool>,
     ) -> Result<SrunClient> {
         let http_client = http_client.unwrap_or_default();
         let ac_id = get_acid(&http_client).await?;
         let login_state = get_login_state(&http_client, false).await?;
         let ip = ip.unwrap_or(login_state.online_ip);
+        let dm = dm.unwrap_or(false);
         Ok(SrunClient {
             http_client,
             username,
             password,
             ip,
             ac_id,
+            dm,
             login_state,
         })
     }
@@ -349,14 +355,44 @@ impl SrunClient {
         }
 
         // perform logout action
-        let params = [
-            ("callback", "jsonp"),
-            ("action", "logout"),
-            ("ip", &self.ip.to_string()),
-            ("ac_id", self.ac_id.as_str()),
-            ("username", logged_in_username.as_str()),
+        let url = {
+            // dumb terminals use a different endpoint (dm logout)
+            match self.dm {
+                true => format!("{}/cgi-bin/rad_user_dm", SRUN_PORTAL),
+                false => format!("{}/cgi-bin/srun_portal", SRUN_PORTAL),
+            }
+        };
+
+        let ip_str = self.ip.to_string();
+        let mut params = vec![
+            ("callback", String::from("jsonp")),
+            ("ip", self.ip.to_string()),
+            ("username", logged_in_username.clone()),
         ];
-        let url = format!("{}/cgi-bin/srun_portal", SRUN_PORTAL);
+
+        if self.dm {
+            use chrono::Utc;
+            let timestamp = Utc::now().timestamp().to_string();
+            let unbind = String::from("1");
+
+            let sign = {
+                let mut hasher = Sha1::new();
+                let sn = format!(
+                    "{0}{1}{2}{3}{0}",
+                    timestamp, logged_in_username, ip_str, unbind
+                );
+
+                hasher.update(sn);
+                format!("{:x}", hasher.finalize())
+            };
+
+            params.push(("time", timestamp));
+            params.push(("unbind", unbind));
+            params.push(("sign", sign));
+        } else {
+            params.push(("action", String::from("logout")));
+            params.push(("ac_id", self.ac_id.clone()));
+        }
 
         let resp = self
             .http_client

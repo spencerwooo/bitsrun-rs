@@ -48,8 +48,12 @@ pub struct ClientArgs {
     pub password: Option<String>,
 
     /// Manually specify IP address (IPv4)
-    #[arg(short, long)]
+    #[arg(long)]
     pub ip: Option<IpAddr>,
+
+    /// Use alternative `dm` logout endpoint for registered dumb terminals
+    #[arg(long)]
+    pub dm: bool,
 
     /// Optionally provide path to the config file
     #[arg(short, long)]

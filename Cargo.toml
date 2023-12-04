@@ -1,7 +1,7 @@
 [package]
 name = "bitsrun"
 description = "A headless login and logout CLI for 10.0.0.55 at BIT"
-version = "0.3.0"
+version = "0.3.1"
 edition = "2021"
 license = "MIT"
 homepage = "https://github.com/spencerwooo/bitsrun-rs"
@@ -43,3 +43,5 @@ strip = "symbols"
 
 [package.metadata.deb]
 copyright = "2023 Spencer Woo"
+maintainer-scripts = "debian/"
+systemd-units = { enable = true, start = false }

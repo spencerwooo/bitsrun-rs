@@ -15,10 +15,11 @@
 
 - `curl -fsSL https://cdn.jsdelivr.net/gh/spencerwooo/bitsrun-rs@main/install.sh | sh -`
 
-#### Ubuntu / Debian
+#### Ubuntu / Debian (recommended for `systemd` support)
 
 - Download the latest `.deb` package from [Releases](https://github.com/spencerwooo/bitsrun-rs/releases/latest).
-- `sudo dpkg -i <file>.deb`
+- `sudo apt install ./<path/to/file>.deb`
+- Start `bitsrun.service` if desired: edit `/lib/systemd/system/bitsrun.service` to specify absolute config path, then `sudo systemctl start bitsrun`
 
 #### Cargo
 

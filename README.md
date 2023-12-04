@@ -1,13 +1,13 @@
 # bitsrun
 
-[![CI](https://github.com/spencerwooo/bitsrun-rs/actions/workflows/ci.yml/badge.svg)](https://github.com/spencerwooo/bitsrun-rs/actions/workflows/ci.yml)
-[![Release](https://github.com/spencerwooo/bitsrun-rs/actions/workflows/release.yml/badge.svg)](https://github.com/spencerwooo/bitsrun-rs/actions/workflows/release.yml)
-[![GitHub release (with filter)](https://img.shields.io/github/v/release/spencerwooo/bitsrun-rs)](https://github.com/spencerwooo/bitsrun-rs/releases/latest)
-[![Crates.io](https://img.shields.io/crates/v/bitsrun?color=rgb(221%2C%20170%2C%2071))](https://crates.io/crates/bitsrun)
+[![GitHub Workflow Status (CI)](https://img.shields.io/github/actions/workflow/status/spencerwooo/bitsrun-rs/ci.yml?logo=github&label=ci&labelColor=%23223227)](https://github.com/spencerwooo/bitsrun-rs/actions/workflows/ci.yml)
+[![GitHub Workflow Status (Release)](https://img.shields.io/github/actions/workflow/status/spencerwooo/bitsrun-rs/release.yml?logo=github&label=release&labelColor=%23223227)](https://github.com/spencerwooo/bitsrun-rs/actions/workflows/release.yml)
+[![GitHub release](https://img.shields.io/github/v/release/spencerwooo/bitsrun-rs?logo=github&labelColor=%23223227)](https://github.com/spencerwooo/bitsrun-rs/releases/latest)
+[![Crates.io](https://img.shields.io/crates/d/bitsrun?logo=rust&labelColor=%23223227&color=%23dec867)](https://crates.io/crates/bitsrun)
 
 🌐 A headless login and logout CLI for 10.0.0.55 at BIT, now in Rust.
 
-![screenshot](https://github.com/spencerwooo/bitsrun-rs/assets/32114380/011e7591-1474-4df8-a371-7a9da7629959)
+![CleanShot 2023-12-04 at 16 47 26@2x](https://github.com/spencerwooo/bitsrun-rs/assets/32114380/23343ba1-961c-41aa-b4b6-c09da93fb699)
 
 ## Install
 
@@ -18,8 +18,12 @@
 #### Ubuntu / Debian (recommended for `systemd` support)
 
 - Download the latest `.deb` package from [Releases](https://github.com/spencerwooo/bitsrun-rs/releases/latest).
-- `sudo apt install ./<path/to/file>.deb`
-- Start `bitsrun.service` if desired: edit `/lib/systemd/system/bitsrun.service` to specify absolute config path, then `sudo systemctl start bitsrun`
+- `sudo apt install </path/to/file>.deb`
+
+**If `bitsrun.service` systemd service required:**
+
+- Edit `/lib/systemd/system/bitsrun.service` to specify absolute config path
+- Then start service with `sudo systemctl start bitsrun`
 
 #### Cargo
 

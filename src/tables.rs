@@ -1,5 +1,6 @@
 use crate::client::SrunLoginState;
-use crate::user::enumerate_config_paths;
+use crate::config::enumerate_config_paths;
+
 use chrono::Duration;
 use chrono_humanize::Accuracy::Rough;
 use chrono_humanize::HumanTime;

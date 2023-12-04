@@ -58,7 +58,7 @@ bitsrun: <ip> (<username>) is online
 
 ```console
 $ bitsrun --help
-A headless login and logout CLI app for 10.0.0.55 at BIT
+A headless login and logout CLI for 10.0.0.55 at BIT
 
 Usage: bitsrun [OPTIONS] [COMMAND]
 
@@ -67,6 +67,7 @@ Commands:
   logout        Logout from the campus network
   status        Check device login status
   config-paths  List all possible config file paths
+  keep-alive    Poll the server with login requests to keep the session alive
   help          Print this message or the help of the given subcommand(s)
 
 Options:
@@ -86,11 +87,13 @@ To save your credentials and configurations, create config file `bit-user.json` 
 {
   "username": "<username>",
   "password": "<password>",
-  "dm": true
+  "dm": true,
+  "poll_interval": 3600
 }
 ```
 
-**`dm` is for specifying whether the current device is a dumb terminal, and requires logging out through the alternative endpoint. Set to `true` (no quotes!) if the device you are working with is a dumb terminal.**
+- **`dm` is for specifying whether the current device is a dumb terminal, and requires logging out through the alternative endpoint. Set to `true` (no quotes!) if the device you are working with is a dumb terminal.**
+- `poll_interval` is an optional field for specifying the interval (in seconds) of polling login requests. Default is `3600` seconds (1 hour). Used by `bitsrun keep-alive` only.
 
 Available config file paths can be listed with:
 

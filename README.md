@@ -19,7 +19,7 @@
 
 - Download the latest `.deb` package from [Releases](https://github.com/spencerwooo/bitsrun-rs/releases/latest).
 - `sudo apt install ./<path/to/file>.deb`
-- Start `bitsrun@.service` if desired: `sudo systemctl start bitsrun`
+- Start `bitsrun.service` if desired: edit `/lib/systemd/system/bitsrun.service` to specify absolute config path, then `sudo systemctl start bitsrun`
 
 #### Cargo
 

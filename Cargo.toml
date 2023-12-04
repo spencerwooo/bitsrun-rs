@@ -44,3 +44,4 @@ strip = "symbols"
 [package.metadata.deb]
 copyright = "2023 Spencer Woo"
 maintainer-scripts = "debian/"
+systemd-units = { enable = true, start = false }

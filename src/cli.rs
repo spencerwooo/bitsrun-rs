@@ -28,6 +28,9 @@ pub enum Commands {
 
     /// List all possible config file paths
     ConfigPaths,
+
+    /// Poll the server with login requests to keep the session alive
+    KeepAlive(DaemonArgs),
 }
 
 #[derive(Args)]
@@ -62,4 +65,11 @@ pub struct ClientArgs {
     /// Force login/logout, don't check login status
     #[arg(short, long)]
     pub force: bool,
+}
+
+#[derive(Args)]
+pub struct DaemonArgs {
+    /// Path to the config file
+    #[arg(short, long)]
+    pub config: Option<String>,
 }

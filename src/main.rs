@@ -1,5 +1,7 @@
 mod cli;
 mod client;
+mod config;
+mod daemon;
 mod tables;
 mod user;
 mod xencode;
@@ -17,6 +19,7 @@ use cli::Arguments;
 use cli::Commands;
 use client::get_login_state;
 use client::SrunClient;
+use daemon::SrunDaemon;
 use tables::print_config_paths;
 use tables::print_login_state;
 
@@ -48,7 +51,7 @@ async fn cli() -> Result<()> {
 
         // login or logout
         Some(Commands::Login(client_args)) | Some(Commands::Logout(client_args)) => {
-            let bit_user = user::get_bit_user(
+            let bit_user = user::finalize_bit_user(
                 &client_args.username,
                 &client_args.password,
                 client_args.dm,
@@ -75,6 +78,12 @@ async fn cli() -> Result<()> {
                 }
                 _ => {}
             };
+        }
+
+        Some(Commands::KeepAlive(daemon_args)) => {
+            let config_path = daemon_args.config.to_owned();
+            let daemon = SrunDaemon::new(config_path)?;
+            daemon.start(http_client).await?;
         }
 
         Some(Commands::ConfigPaths) => print_config_paths(),

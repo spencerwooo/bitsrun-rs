@@ -445,7 +445,7 @@ impl SrunClient {
         }
 
         if raw_text.len() < 8 {
-            bail!("logout response too short: `{}`", raw_text)
+            bail!("challenge response too short: `{}`", raw_text)
         }
         let raw_json = &raw_text[6..raw_text.len() - 1];
         let parsed_json = serde_json::from_str::<SrunChallenge>(raw_json).with_context(|| {

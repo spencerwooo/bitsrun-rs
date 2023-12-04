@@ -1,0 +1,12 @@
+[Unit]
+Description=A headless login and logout CLI for 10.0.0.55 at BIT (%i).
+After=network.target
+
+[Service]
+Type=simple
+User=%i
+Restart=on-abort
+ExecStart=/usr/bin/bitsrun keep-alive
+
+[Install]
+WantedBy=multi-user.target

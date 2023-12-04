@@ -5,7 +5,7 @@
 [![GitHub release (with filter)](https://img.shields.io/github/v/release/spencerwooo/bitsrun-rs)](https://github.com/spencerwooo/bitsrun-rs/releases/latest)
 [![Crates.io](https://img.shields.io/crates/v/bitsrun?color=rgb(221%2C%20170%2C%2071))](https://crates.io/crates/bitsrun)
 
-🌐 A headless login and logout CLI app for 10.0.0.55 at BIT, now in Rust.
+🌐 A headless login and logout CLI for 10.0.0.55 at BIT, now in Rust.
 
 ![screenshot](https://github.com/spencerwooo/bitsrun-rs/assets/32114380/011e7591-1474-4df8-a371-7a9da7629959)
 
@@ -15,10 +15,11 @@
 
 - `curl -fsSL https://cdn.jsdelivr.net/gh/spencerwooo/bitsrun-rs@main/install.sh | sh -`
 
-#### Ubuntu / Debian
+#### Ubuntu / Debian (recommended for `systemd` support)
 
 - Download the latest `.deb` package from [Releases](https://github.com/spencerwooo/bitsrun-rs/releases/latest).
-- `sudo dpkg -i <file>.deb`
+- `sudo apt install ./<path/to/file>.deb`
+- Start `bitsrun@.service` if desired: `sudo systemctl start bitsrun`
 
 #### Cargo
 
@@ -53,6 +54,19 @@ bitsrun: <ip> (<username>) is online
 │ 188.10 GiB     │ 2 months      │ 10.00         │ 0.00    │
 └────────────────┴───────────────┴───────────────┴─────────┘
 ```
+
+To keep the session alive, use `bitsrun keep-alive`:
+
+```console
+$ bitsrun keep-alive
+ INFO  bitsrun::daemon > starting daemon (<username>) with polling interval=3600s
+ INFO  bitsrun::daemon > <ip> (<username>): login success,
+ ...
+ ^C INFO  bitsrun::daemon > <username>: gracefully exiting
+```
+
+> [!NOTE]
+> Use available system service managers to run `bitsrun keep-alive` as a daemon. (e.g., `systemd` for Linux, `launchd` for macOS, and Windows Service for Windows).
 
 ## Available commands
 

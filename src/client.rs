@@ -23,6 +23,9 @@ pub const SRUN_PORTAL: &str = "http://10.0.0.55";
 pub const SRUN_TYPE: &str = "1";
 pub const SRUN_N: &str = "200";
 
+/// An arbitrary HTTP URL for srun to redirect
+pub const CAPTIVE_PORTAL_TEST: &str = "http://www.bit.edu.cn";
+
 /// The response from the `/rad_user_info` endpoint
 ///
 /// This response is used to determine if the device is logged in or not, and if it is logged in,
@@ -128,12 +131,12 @@ pub async fn get_login_state(client: &Client, verbose: bool) -> Result<SrunLogin
     Ok(parsed_json)
 }
 
-/// Get the ac_id of the current device
-async fn get_acid(client: &Client) -> Result<String> {
-    let resp = client.get(SRUN_PORTAL).send().await.with_context(|| {
+/// Get the ac_id of the current device by visiting a URL
+async fn get_acid_by_url(client: &Client, url: &str) -> Result<String> {
+    let resp = client.get(url).send().await.with_context(|| {
         format!(
             "failed to get ac_id from `{}`",
-            SRUN_PORTAL.if_supports_color(Stdout, |t| t.underline())
+            url.if_supports_color(Stdout, |t| t.underline())
         )
     })?;
     let redirect_url = resp.url().to_string();
@@ -152,6 +155,20 @@ async fn get_acid(client: &Client) -> Result<String> {
         )
     })?;
     Ok(ac_id.1)
+}
+
+/// Get the ac_id of the current device
+async fn get_acid(client: &Client) -> Result<String> {
+    // Try to visit `CAPTIVE_PORTAL_TEST`.
+    // If not logged in, it will be redirected to `SRUN_PORTAL` with ac_id.
+    // Otherwise, we fall back to visit `SRUN_PORTAL` directly.
+    // https://en.wikipedia.org/wiki/Captive_portal#Detection
+    //
+    // Because of ITC's double authentication mechanism, visiting `SRUN_PORTAL` directly is not preferred.
+    // https://itc.bit.edu.cn/fwzn/zxbl/f2c0c8e939ce4e9cace880d5403fe4b5.htm
+    get_acid_by_url(client, CAPTIVE_PORTAL_TEST)
+        .await
+        .or(get_acid_by_url(client, SRUN_PORTAL).await)
 }
 
 /// SRUN portal response type when calling login/logout

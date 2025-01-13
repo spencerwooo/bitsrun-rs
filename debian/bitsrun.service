@@ -4,7 +4,8 @@ After=network.target
 
 [Service]
 Type=simple
-Restart=on-abort
+Restart=always
+RestartSec=10s
 ExecStart=/usr/bin/bitsrun keep-alive --config /path/to/bit-user.json
 
 [Install]

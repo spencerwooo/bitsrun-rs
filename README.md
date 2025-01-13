@@ -5,7 +5,7 @@
 [![GitHub release](https://img.shields.io/github/v/release/spencerwooo/bitsrun-rs?logo=github&labelColor=%23223227)](https://github.com/spencerwooo/bitsrun-rs/releases/latest)
 [![Crates.io](https://img.shields.io/crates/d/bitsrun?logo=rust&labelColor=%23223227&color=%23dec867)](https://crates.io/crates/bitsrun)
 
-🌐 A headless login and logout CLI for 10.0.0.55 at BIT, now in Rust.
+🌐 A headless login and logout CLI for gateway (10.0.0.55) at BIT, now in Rust.
 
 ![CleanShot 2023-12-04 at 16 47 26@2x](https://github.com/spencerwooo/bitsrun-rs/assets/32114380/23343ba1-961c-41aa-b4b6-c09da93fb699)
 

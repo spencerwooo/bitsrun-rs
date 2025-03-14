@@ -11,6 +11,7 @@ use anyhow::Result;
 use clap::Parser;
 use cli::ClientArgs;
 use cli::StatusArgs;
+use enable_ansi_support::enable_ansi_support;
 use owo_colors::OwoColorize;
 use owo_colors::Stream::Stderr;
 use owo_colors::Stream::Stdout;
@@ -37,6 +38,11 @@ async fn main() {
 }
 
 async fn cli() -> Result<()> {
+    // disable ansi colors on non-supported windows terminals
+    if enable_ansi_support().is_err() {
+        owo_colors::set_override(false);
+    }
+
     let args = Arguments::parse();
 
     // reusable http client

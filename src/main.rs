@@ -65,7 +65,7 @@ async fn cli() -> Result<()> {
                 bit_user.password,
                 Some(http_client),
                 client_args.ip,
-                Some(client_args.dm),
+                Some(bit_user.dm),
             )
             .await?;
 

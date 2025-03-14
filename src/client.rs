@@ -70,7 +70,7 @@ pub struct SrunLoginState {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub sysver: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub user_balance: Option<i64>,
+    pub user_balance: Option<f64>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub user_charge: Option<i64>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -78,7 +78,7 @@ pub struct SrunLoginState {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub user_name: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub wallet_balance: Option<i64>,
+    pub wallet_balance: Option<f64>,
 
     // present when logged out
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -121,12 +121,10 @@ pub async fn get_login_state(client: &Client, verbose: bool) -> Result<SrunLogin
         bail!("login status response too short: `{}`", raw_text)
     }
     let raw_json = &raw_text[6..raw_text.len() - 1];
-    let parsed_json = serde_json::from_str::<SrunLoginState>(raw_json).with_context(|| {
-        format!(
-            "failed to parse malformed login status response:\n  {}",
-            raw_json
-        )
-    })?;
+    let parsed_json = match serde_json::from_str::<SrunLoginState>(raw_json) {
+        Ok(json) => json,
+        Err(err) => bail!("failed to parse login status response: {}", err),
+    };
 
     Ok(parsed_json)
 }

@@ -58,8 +58,8 @@ pub fn print_login_state(state: SrunLoginState) {
     let online_time = state.sum_seconds.unwrap_or(0);
     let human_time = HumanTime::from(Duration::seconds(online_time));
 
-    let user_balance = state.user_balance.unwrap_or(0) as f32;
-    let wallet = state.wallet_balance.unwrap_or(0) as f32;
+    let user_balance = state.user_balance.unwrap_or(0.0);
+    let wallet = state.wallet_balance.unwrap_or(0.0);
 
     builder.push_record([
         format_size(traffic_used, BINARY)
